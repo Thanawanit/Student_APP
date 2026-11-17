@@ -64,14 +64,12 @@ void main() {
       expect(find.textContaining('จาก 12 คน'), findsOneWidget);
       expect(find.text('75%'), findsOneWidget);
       expect(find.text('สแกนเข้าโรงเรียนแล้ว'), findsOneWidget);
-      expect(find.text('ดูรายชื่อนักเรียนทั้งห้อง (12 คน)'), findsOneWidget);
+      expect(find.text('ดูรายชื่อทั้งหมด (12)'), findsOneWidget);
 
       // Open dedicated Student List screen
-      await tester.ensureVisible(
-        find.text('ดูรายชื่อนักเรียนทั้งห้อง (12 คน)'),
-      );
+      await tester.ensureVisible(find.text('ดูรายชื่อทั้งหมด (12)'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('ดูรายชื่อนักเรียนทั้งห้อง (12 คน)'));
+      await tester.tap(find.text('ดูรายชื่อทั้งหมด (12)'));
       await tester.pumpAndSettle();
 
       // Screen B: Dedicated Student List
@@ -124,13 +122,13 @@ void main() {
       expect(find.text('สรุปสัปดาห์นี้'), findsOneWidget);
       expect(find.text('สัปดาห์ 16–20 พ.ย. 2569'), findsOneWidget);
       expect(find.text('รอยืนยัน'), findsWidgets);
-      expect(find.text('ดูประวัติทั้งหมด'), findsOneWidget);
+      expect(find.text('ดูประวัติการเข้าเรียนย้อนหลัง'), findsOneWidget);
       expect(find.text('แก้ไขสถานะ'), findsNothing);
 
       // Navigate to dedicated Parent History screen and filter by October
-      await tester.ensureVisible(find.text('ดูประวัติทั้งหมด'));
+      await tester.ensureVisible(find.text('ดูประวัติการเข้าเรียนย้อนหลัง'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('ดูประวัติทั้งหมด'));
+      await tester.tap(find.text('ดูประวัติการเข้าเรียนย้อนหลัง'));
       await tester.pumpAndSettle();
 
       await tester.ensureVisible(find.text('ต.ค. 2569').first);
@@ -169,7 +167,7 @@ void main() {
 
       expect(find.text('โหมดผู้ปกครอง'), findsOneWidget);
       expect(find.text('ธนกฤต รัตนโชติ'), findsWidgets);
-      expect(find.text('ดูประวัติทั้งหมด'), findsOneWidget);
+      expect(find.text('ดูประวัติการเข้าเรียนย้อนหลัง'), findsOneWidget);
     },
   );
 
@@ -265,7 +263,7 @@ void main() {
       expect(find.text('ธนกฤต รัตนโชติ'), findsOneWidget);
       expect(find.text('ถึงโรงเรียนแล้ว (ตรงเวลา)'), findsOneWidget);
       expect(find.text('สรุปสัปดาห์นี้'), findsOneWidget);
-      expect(find.text('ดูประวัติทั้งหมด'), findsOneWidget);
+      expect(find.text('ดูประวัติการเข้าเรียนย้อนหลัง'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

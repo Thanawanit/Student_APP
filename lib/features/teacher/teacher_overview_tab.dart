@@ -14,7 +14,7 @@ import '../../state/app_controller.dart';
 import '../shared/student_detail_screen.dart';
 import 'class_selection_screen.dart';
 
-/// Screen A — Focused Teacher Overview (Header -> Obsidian Analytics -> Actions).
+/// Screen A — Light Editorial Teacher Overview (no classroom-management clutter).
 class TeacherOverviewTab extends StatelessWidget {
   const TeacherOverviewTab({
     super.key,
@@ -114,11 +114,11 @@ class TeacherOverviewTab extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  // 01. Context bar (Classroom hierarchy, date, sync update)
+                  // 01. Classroom identity, date, and sync indicator
                   Padding(
                     padding: EdgeInsets.fromLTRB(
                       inset,
-                      AppSpacing.space4,
+                      AppSpacing.space3,
                       inset,
                       AppSpacing.space3,
                     ),
@@ -169,8 +169,7 @@ class TeacherOverviewTab extends StatelessWidget {
                         description:
                             'ยังไม่มีรายชื่อนักเรียนหรือกำหนดการเรียนในวันที่เลือก',
                       )
-                    else ...<Widget>[
-                      // 02. Primary Metric + 03. Distribution + 04. Attention
+                    else
                       SummaryMetricStrip(
                         snapshot: snapshot,
                         onTapStudent: (student) {
@@ -184,128 +183,13 @@ class TeacherOverviewTab extends StatelessWidget {
                             ),
                           );
                         },
-                        onFilterAttention: (status) =>
-                            onOpenStudentList(status),
+                        onOpenStudentList: onOpenStudentList,
                       ),
-
-                      const SizedBox(height: AppSpacing.space5),
-
-                      // 05. Navigation actions to Student List & History
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: inset),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(
-                              'จัดการข้อมูลห้องเรียน',
-                              style: AppTypography.microLabel.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.space2),
-                            Container(
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                color: AppColors.surface,
-                                borderRadius: BorderRadius.circular(
-                                  AppRadius.panel,
-                                ),
-                                border: Border.all(
-                                  color: AppColors.borderSubtle,
-                                ),
-                              ),
-                              child: Column(
-                                children: <Widget>[
-                                  _NavigationEntryRow(
-                                    icon: Icons.people_outline,
-                                    title:
-                                        'ดูรายชื่อนักเรียนทั้งห้อง (${snapshot.totalStudents} คน)',
-                                    subtitle:
-                                        'ค้นหา กรองสถานะ ดูเวลาสแกนเข้า และแก้ไขสถานะ',
-                                    onTap: () => onOpenStudentList(null),
-                                  ),
-                                  const Divider(),
-                                  _NavigationEntryRow(
-                                    icon: Icons.history_outlined,
-                                    title: 'ดูประวัติการเข้าเรียนย้อนหลัง',
-                                    subtitle:
-                                        'ตรวจสอบบันทึกการเข้าเรียนของห้องตามวันที่ย้อนหลัง',
-                                    onTap: onOpenHistory,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
                   ],
                 ],
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _NavigationEntryRow extends StatelessWidget {
-  const _NavigationEntryRow({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          minHeight: AppSpacing.minTouchTarget + 14,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.space4,
-            vertical: AppSpacing.space3,
-          ),
-          child: Row(
-            children: <Widget>[
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: AppColors.brandPrimarySoft,
-                  borderRadius: BorderRadius.circular(AppRadius.control),
-                ),
-                child: Icon(icon, color: AppColors.brandPrimary, size: 20),
-              ),
-              const SizedBox(width: AppSpacing.space3),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(title, style: AppTypography.bodyStrong),
-                    const SizedBox(height: 2),
-                    Text(subtitle, style: AppTypography.supporting),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.space2),
-              const Icon(
-                Icons.chevron_right,
-                size: 20,
-                color: AppColors.textSecondary,
-              ),
-            ],
-          ),
         ),
       ),
     );

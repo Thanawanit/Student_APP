@@ -8,18 +8,19 @@ import '../../domain/models/attendance_models.dart';
 import '../../domain/models/attendance_status.dart';
 import 'status_chip.dart';
 
-/// Obsidian Hero Analytics + Swiss Distribution Ledger + Attention Preview.
+/// Light Editorial × Data Intelligence overview for Teacher Dashboard.
+/// Uses typography-led hierarchy and hairline separators instead of heavy cards.
 class SummaryMetricStrip extends StatelessWidget {
   const SummaryMetricStrip({
     super.key,
     required this.snapshot,
     this.onTapStudent,
-    this.onFilterAttention,
+    this.onOpenStudentList,
   });
 
   final ClassroomAttendanceSnapshot snapshot;
   final ValueChanged<StudentAttendanceRecord>? onTapStudent;
-  final ValueChanged<AttendanceStatus>? onFilterAttention;
+  final ValueChanged<AttendanceStatus?>? onOpenStudentList;
 
   List<StudentAttendanceRecord> _attentionStudents() {
     const priorityOrder = <AttendanceStatus, int>{
@@ -70,93 +71,81 @@ class SummaryMetricStrip extends StatelessWidget {
 
     final attentionList = _attentionStudents();
 
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: inset),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isWideDesktop = constraints.maxWidth >= 740;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWideDesktop = constraints.maxWidth >= 800;
 
-          final heroBlock = _ObsidianHeroBlock(
-            checkedIn: checkedIn,
-            total: total,
-            ratePercent: ratePercent,
-            stateLabel: stateLabel,
-            snapshot: snapshot,
-          );
-
-          final distributionBlock = Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppRadius.panel),
-              border: Border.all(color: AppColors.borderSubtle),
+        final overviewBand = Container(
+          width: double.infinity,
+          decoration: const BoxDecoration(
+            color: AppColors.surface,
+            border: Border(
+              top: BorderSide(color: AppColors.borderSubtle),
+              bottom: BorderSide(color: AppColors.borderSubtle),
             ),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.space3,
-              vertical: AppSpacing.space3,
-            ),
-            child: _StatGrid(
-              cells: cells,
-              availableWidth: isWideDesktop
-                  ? constraints.maxWidth * 0.46
-                  : constraints.maxWidth - (AppSpacing.space3 * 2),
-            ),
-          );
-
-          final attentionBlock = Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppRadius.panel),
-              border: Border.all(color: AppColors.borderSubtle),
-            ),
-            padding: const EdgeInsets.all(AppSpacing.space4),
-            child: _AttentionSection(
-              students: attentionList,
-              isBeforeCutoff: snapshot.isBeforeCutoff,
-              onTapStudent: onTapStudent,
-              onFilterAttention: onFilterAttention,
-            ),
-          );
-
-          if (isWideDesktop) {
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Expanded(flex: 6, child: heroBlock),
-                const SizedBox(width: AppSpacing.space4),
-                Expanded(
-                  flex: 6,
-                  child: Column(
-                    children: <Widget>[
-                      distributionBlock,
-                      const SizedBox(height: AppSpacing.space3),
-                      attentionBlock,
-                    ],
-                  ),
-                ),
-              ],
-            );
-          }
-
-          return Column(
+          ),
+          padding: EdgeInsets.symmetric(
+            horizontal: inset,
+            vertical: AppSpacing.space4,
+          ),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              heroBlock,
+              _ProgressMetricHeader(
+                checkedIn: checkedIn,
+                total: total,
+                ratePercent: ratePercent,
+                stateLabel: stateLabel,
+                snapshot: snapshot,
+              ),
+              const SizedBox(height: AppSpacing.space4),
+              const Divider(),
               const SizedBox(height: AppSpacing.space3),
-              distributionBlock,
-              const SizedBox(height: AppSpacing.space3),
-              attentionBlock,
+              _StatGrid(
+                cells: cells,
+                availableWidth: isWideDesktop
+                    ? constraints.maxWidth * 0.48
+                    : constraints.maxWidth - (inset * 2),
+              ),
+            ],
+          ),
+        );
+
+        final attentionBand = _AttentionSection(
+          inset: inset,
+          totalStudents: total,
+          students: attentionList,
+          isBeforeCutoff: snapshot.isBeforeCutoff,
+          onTapStudent: onTapStudent,
+          onOpenStudentList: onOpenStudentList,
+        );
+
+        if (isWideDesktop) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Expanded(flex: 6, child: overviewBand),
+              Container(width: 1, color: AppColors.borderSubtle),
+              Expanded(flex: 6, child: attentionBand),
             ],
           );
-        },
-      ),
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            overviewBand,
+            const SizedBox(height: AppSpacing.space4),
+            attentionBand,
+          ],
+        );
+      },
     );
   }
 }
 
-class _ObsidianHeroBlock extends StatelessWidget {
-  const _ObsidianHeroBlock({
+class _ProgressMetricHeader extends StatelessWidget {
+  const _ProgressMetricHeader({
     required this.checkedIn,
     required this.total,
     required this.ratePercent,
@@ -172,165 +161,64 @@ class _ObsidianHeroBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.space5),
-      decoration: BoxDecoration(
-        color: AppColors.inkSurface,
-        borderRadius: BorderRadius.circular(AppRadius.panel),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              Expanded(
-                child: Text(
-                  'สแกนเข้าโรงเรียนแล้ว',
-                  style: AppTypography.supporting.copyWith(
-                    color: AppColors.inkTextMuted,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.space2),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.brandPrimary,
-                  borderRadius: BorderRadius.circular(AppRadius.badge),
-                ),
-                child: Text(
-                  '$ratePercent%',
-                  style: AppTypography.microLabel.copyWith(
-                    color: AppColors.surface,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.space2),
-          Semantics(
-            label:
-                'สแกนเข้าโรงเรียนแล้ว $checkedIn จาก $total คน คิดเป็นร้อยละ $ratePercent',
-            child: Wrap(
-              crossAxisAlignment: WrapCrossAlignment.end,
-              spacing: AppSpacing.space2,
-              children: <Widget>[
-                Text(
-                  '$checkedIn',
-                  style: AppTypography.display.copyWith(
-                    color: AppColors.inkText,
-                  ),
-                ),
-                Text(
-                  'จาก $total คน',
-                  style: AppTypography.sectionTitle.copyWith(
-                    color: AppColors.inkTextMuted,
-                    fontWeight: FontWeight.w500,
-                    fontFeatures: const <FontFeature>[
-                      FontFeature.tabularFigures(),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.space1),
-          Text(
-            'มาเรียน ${snapshot.presentCount} คน • มาสาย ${snapshot.lateCount} คน',
-            style: AppTypography.supporting.copyWith(
-              color: AppColors.inkText,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          Text(
-            stateLabel,
-            style: AppTypography.microLabel.copyWith(
-              color: AppColors.inkTextMuted,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.space4),
-          _ProportionalDistributionBar(snapshot: snapshot),
-          const SizedBox(height: AppSpacing.space3),
-          Wrap(
-            spacing: AppSpacing.space3,
-            runSpacing: 4,
-            children: <Widget>[
-              _DarkLegendDot(
-                color: AppColors.inkEmeraldAccent,
-                label: 'มาเรียน',
-                count: snapshot.presentCount,
-                total: total,
-              ),
-              _DarkLegendDot(
-                color: const Color(0xFFFBBF24),
-                label: 'มาสาย',
-                count: snapshot.lateCount,
-                total: total,
-              ),
-              if (snapshot.leaveCount > 0)
-                _DarkLegendDot(
-                  color: const Color(0xFF93A3F8),
-                  label: 'ลา',
-                  count: snapshot.leaveCount,
-                  total: total,
-                ),
-              if (snapshot.pendingCount > 0)
-                _DarkLegendDot(
-                  color: const Color(0xFF9CA8A3),
-                  label: 'รอยืนยัน',
-                  count: snapshot.pendingCount,
-                  total: total,
-                ),
-              if (snapshot.absentCount > 0)
-                _DarkLegendDot(
-                  color: const Color(0xFFF87171),
-                  label: 'ขาดเรียน',
-                  count: snapshot.absentCount,
-                  total: total,
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DarkLegendDot extends StatelessWidget {
-  const _DarkLegendDot({
-    required this.color,
-    required this.label,
-    required this.count,
-    required this.total,
-  });
-
-  final Color color;
-  final String label;
-  final int count;
-  final int total;
-
-  @override
-  Widget build(BuildContext context) {
-    final pct = total > 0 ? ((count / total) * 100).round() : 0;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Container(
-          width: 7,
-          height: 7,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Expanded(
+              child: Text(
+                'สแกนเข้าโรงเรียนแล้ว',
+                style: AppTypography.supporting.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.space2),
+            Text(
+              '$ratePercent%',
+              style: AppTypography.bodyStrong.copyWith(
+                color: AppColors.brandPrimary,
+                fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 5),
-        Text(
-          '$label $count ($pct%)',
-          style: AppTypography.microLabel.copyWith(
-            color: AppColors.inkTextMuted,
+        const SizedBox(height: AppSpacing.space1),
+        Semantics(
+          label:
+              'สแกนเข้าโรงเรียนแล้ว $checkedIn จาก $total คน คิดเป็นร้อยละ $ratePercent',
+          child: Wrap(
+            crossAxisAlignment: WrapCrossAlignment.end,
+            spacing: AppSpacing.space2,
+            children: <Widget>[
+              Text('$checkedIn', style: AppTypography.display),
+              Text(
+                'จาก $total คน',
+                style: AppTypography.sectionTitle.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                  fontFeatures: const <FontFeature>[
+                    FontFeature.tabularFigures(),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
+        const SizedBox(height: AppSpacing.space1),
+        Text(
+          'มาเรียน ${snapshot.presentCount} คน • มาสาย ${snapshot.lateCount} คน',
+          style: AppTypography.supporting.copyWith(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        Text(stateLabel, style: AppTypography.microLabel),
+        const SizedBox(height: AppSpacing.space3),
+        _ProportionalDistributionBar(snapshot: snapshot),
       ],
     );
   }
@@ -344,22 +232,25 @@ class _ProportionalDistributionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final segments = <(Color, int)>[
-      (AppColors.inkEmeraldAccent, snapshot.presentCount),
-      (const Color(0xFFFBBF24), snapshot.lateCount),
-      (const Color(0xFF93A3F8), snapshot.leaveCount),
-      (const Color(0xFF9CA8A3), snapshot.pendingCount),
-      (const Color(0xFFF87171), snapshot.absentCount),
-      (const Color(0xFF64748B), snapshot.unknownCount),
+      (AppColors.presentForeground, snapshot.presentCount),
+      (AppColors.lateForeground, snapshot.lateCount),
+      (AppColors.leaveForeground, snapshot.leaveCount),
+      (
+        AppColors.pendingForeground.withValues(alpha: 0.45),
+        snapshot.pendingCount,
+      ),
+      (AppColors.absentForeground, snapshot.absentCount),
+      (AppColors.unknownForeground, snapshot.unknownCount),
     ].where((s) => s.$2 > 0).toList();
 
     if (segments.isEmpty) {
-      return Container(height: 7, color: AppColors.inkSurfaceDivider);
+      return Container(height: 6, color: AppColors.surfaceSubtle);
     }
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(3),
       child: SizedBox(
-        height: 7,
+        height: 6,
         child: Row(
           children: <Widget>[
             for (var i = 0; i < segments.length; i++) ...<Widget>[
@@ -378,118 +269,135 @@ class _ProportionalDistributionBar extends StatelessWidget {
 
 class _AttentionSection extends StatelessWidget {
   const _AttentionSection({
+    required this.inset,
+    required this.totalStudents,
     required this.students,
     required this.isBeforeCutoff,
     this.onTapStudent,
-    this.onFilterAttention,
+    this.onOpenStudentList,
   });
 
+  final double inset;
+  final int totalStudents;
   final List<StudentAttendanceRecord> students;
   final bool isBeforeCutoff;
   final ValueChanged<StudentAttendanceRecord>? onTapStudent;
-  final ValueChanged<AttendanceStatus>? onFilterAttention;
+  final ValueChanged<AttendanceStatus?>? onOpenStudentList;
 
   @override
   Widget build(BuildContext context) {
-    if (students.isEmpty) {
-      return Row(
-        children: <Widget>[
-          const Icon(
-            Icons.check_circle_outline,
-            size: 18,
-            color: AppColors.presentForeground,
-          ),
-          const SizedBox(width: AppSpacing.space2),
-          Expanded(
-            child: Text(
-              'นักเรียนทุกคนในห้องมีสถานะเรียบร้อยแล้ว',
-              style: AppTypography.supporting.copyWith(
-                color: AppColors.presentForeground,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-
     final preview = students.take(3).toList();
-    final remaining = students.length - preview.length;
-    final primaryStatus = preview.first.todayEntry.status;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        SizedBox(
-          width: double.infinity,
-          child: Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: AppSpacing.space2,
-            children: <Widget>[
-              Text(
-                isBeforeCutoff
-                    ? 'รอตรวจสอบ / มาสาย (${students.length} คน)'
-                    : 'นักเรียนที่ต้องติดตาม (${students.length} คน)',
-                style: AppTypography.bodyStrong,
-              ),
-              if (onFilterAttention != null)
-                InkWell(
-                  onTap: () => onFilterAttention!(primaryStatus),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    child: Text(
-                      remaining > 0
-                          ? 'ดูทั้งหมด (+อีก $remaining คน)'
-                          : 'เปิดในรายชื่อ',
-                      style: AppTypography.microLabel.copyWith(
-                        color: AppColors.brandPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: inset),
+          child: SizedBox(
+            width: double.infinity,
+            child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: AppSpacing.space2,
+              children: <Widget>[
+                Text(
+                  isBeforeCutoff
+                      ? 'รอตรวจสอบ / มาสาย (${students.length})'
+                      : 'นักเรียนที่ต้องติดตาม (${students.length})',
+                  style: AppTypography.sectionTitle,
                 ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.space2),
-        for (var i = 0; i < preview.length; i++) ...<Widget>[
-          InkWell(
-            onTap: onTapStudent != null
-                ? () => onTapStudent!(preview[i])
-                : null,
-            borderRadius: BorderRadius.circular(AppRadius.badge),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    child: Text(
-                      preview[i].fullName,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.supporting.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                if (onOpenStudentList != null)
+                  TextButton(
+                    onPressed: () => onOpenStudentList!(null),
+                    child: Text('ดูรายชื่อทั้งหมด ($totalStudents)'),
                   ),
-                  const SizedBox(width: AppSpacing.space2),
-                  AttendanceStatusChip(
-                    status: preview[i].todayEntry.status,
-                    compact: true,
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(
-                    Icons.chevron_right,
-                    size: 16,
-                    color: AppColors.textDisabled,
-                  ),
-                ],
-              ),
+              ],
             ),
           ),
-          if (i < preview.length - 1) const Divider(),
-        ],
+        ),
+        const SizedBox(height: AppSpacing.space1),
+        Container(
+          width: double.infinity,
+          decoration: const BoxDecoration(
+            color: AppColors.surface,
+            border: Border(
+              top: BorderSide(color: AppColors.borderSubtle),
+              bottom: BorderSide(color: AppColors.borderSubtle),
+            ),
+          ),
+          child: students.isEmpty
+              ? Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: inset,
+                    vertical: AppSpacing.space4,
+                  ),
+                  child: Row(
+                    children: <Widget>[
+                      const Icon(
+                        Icons.check_circle_outline,
+                        size: 18,
+                        color: AppColors.presentForeground,
+                      ),
+                      const SizedBox(width: AppSpacing.space2),
+                      Expanded(
+                        child: Text(
+                          'นักเรียนทุกคนในห้องมีสถานะเรียบร้อยแล้ว',
+                          style: AppTypography.supporting.copyWith(
+                            color: AppColors.presentForeground,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : Column(
+                  children: <Widget>[
+                    for (var i = 0; i < preview.length; i++) ...<Widget>[
+                      InkWell(
+                        onTap: onTapStudent != null
+                            ? () => onTapStudent!(preview[i])
+                            : null,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            minHeight: AppSpacing.minTouchTarget + 4,
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: inset,
+                              vertical: 10,
+                            ),
+                            child: Row(
+                              children: <Widget>[
+                                Expanded(
+                                  child: Text(
+                                    preview[i].fullName,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTypography.bodyStrong,
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.space2),
+                                AttendanceStatusChip(
+                                  status: preview[i].todayEntry.status,
+                                  compact: true,
+                                ),
+                                const SizedBox(width: AppSpacing.space1),
+                                const Icon(
+                                  Icons.chevron_right,
+                                  size: 18,
+                                  color: AppColors.textDisabled,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (i < preview.length - 1)
+                        Divider(indent: inset, endIndent: inset),
+                    ],
+                  ],
+                ),
+        ),
       ],
     );
   }

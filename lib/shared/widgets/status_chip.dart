@@ -4,7 +4,7 @@ import '../../core/theme/app_tokens.dart';
 import '../../core/theme/app_typography.dart';
 import '../../domain/models/attendance_status.dart';
 
-/// Linear-inspired sharp semantic status badge pairing icon, subtle border, and Thai text.
+/// Restrained editorial status indicator pairing semantic dot/icon and Thai text.
 class AttendanceStatusChip extends StatelessWidget {
   const AttendanceStatusChip({
     super.key,
@@ -18,7 +18,7 @@ class AttendanceStatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final horizontalPadding = compact ? AppSpacing.space2 : AppSpacing.space3;
-    final verticalPadding = compact ? 3.5 : 5.5;
+    final verticalPadding = compact ? 3.0 : 5.0;
 
     return Semantics(
       label: 'สถานะ ${status.label}',
@@ -32,9 +32,6 @@ class AttendanceStatusChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: status.backgroundColor,
           borderRadius: BorderRadius.circular(AppRadius.badge),
-          border: Border.all(
-            color: status.foregroundColor.withValues(alpha: 0.22),
-          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

@@ -89,7 +89,7 @@ abstract final class AppTheme {
             if (states.contains(WidgetState.pressed)) {
               return AppColors.brandPrimaryPressed;
             }
-            return AppColors.inkSurface;
+            return AppColors.brandPrimary;
           }),
           foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
             if (states.contains(WidgetState.disabled)) {
@@ -225,7 +225,7 @@ abstract final class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.inkSurface,
+        backgroundColor: AppColors.textPrimary,
         contentTextStyle: AppTypography.body.copyWith(color: AppColors.surface),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.control),

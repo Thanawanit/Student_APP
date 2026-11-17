@@ -105,7 +105,9 @@ class _TeacherClassSelectionScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     // Step indicator bar
-                    Row(
+                    Wrap(
+                      spacing: AppSpacing.space2,
+                      runSpacing: AppSpacing.space2,
                       children: <Widget>[
                         _StepPill(
                           number: '01',
@@ -113,14 +115,12 @@ class _TeacherClassSelectionScreenState
                           active: currentStep == 1,
                           completed: currentStep > 1,
                         ),
-                        const SizedBox(width: AppSpacing.space2),
                         _StepPill(
                           number: '02',
                           label: 'ระดับชั้น',
                           active: currentStep == 2,
                           completed: currentStep > 2,
                         ),
-                        const SizedBox(width: AppSpacing.space2),
                         _StepPill(
                           number: '03',
                           label: 'ห้องเรียน',
@@ -234,40 +234,38 @@ class _StepPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.space2,
-          vertical: 6,
-        ),
-        decoration: BoxDecoration(
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.space3,
+        vertical: 6,
+      ),
+      decoration: BoxDecoration(
+        color: active
+            ? AppColors.brandPrimary
+            : completed
+            ? AppColors.brandPrimarySoft
+            : AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.control),
+        border: Border.all(
           color: active
-              ? AppColors.inkSurface
+              ? AppColors.brandPrimary
               : completed
-              ? AppColors.brandPrimarySoft
-              : AppColors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.control),
-          border: Border.all(
-            color: active
-                ? AppColors.inkSurface
-                : completed
-                ? AppColors.brandPrimary.withValues(alpha: 0.3)
-                : AppColors.borderSubtle,
-          ),
+              ? AppColors.brandPrimary.withValues(alpha: 0.3)
+              : AppColors.borderSubtle,
         ),
-        child: Text(
-          '$number $label',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-          style: AppTypography.microLabel.copyWith(
-            color: active
-                ? AppColors.surface
-                : completed
-                ? AppColors.brandPrimary
-                : AppColors.textSecondary,
-            fontWeight: active || completed ? FontWeight.w600 : FontWeight.w500,
-          ),
+      ),
+      child: Text(
+        '$number $label',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+        style: AppTypography.microLabel.copyWith(
+          color: active
+              ? AppColors.surface
+              : completed
+              ? AppColors.brandPrimary
+              : AppColors.textSecondary,
+          fontWeight: active || completed ? FontWeight.w600 : FontWeight.w500,
         ),
       ),
     );
@@ -406,7 +404,7 @@ class _RoomGridTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: isSelected ? AppColors.inkSurface : AppColors.surface,
+      color: isSelected ? AppColors.brandPrimarySoft : AppColors.surface,
       borderRadius: BorderRadius.circular(AppRadius.panel),
       child: InkWell(
         onTap: onTap,
@@ -416,7 +414,10 @@ class _RoomGridTile extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppRadius.panel),
             border: Border.all(
-              color: isSelected ? AppColors.inkSurface : AppColors.borderSubtle,
+              color: isSelected
+                  ? AppColors.brandPrimary
+                  : AppColors.borderSubtle,
+              width: isSelected ? 1.5 : AppBorders.width,
             ),
           ),
           child: Row(
@@ -428,7 +429,7 @@ class _RoomGridTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.sectionTitle.copyWith(
                     color: isSelected
-                        ? AppColors.surface
+                        ? AppColors.brandPrimary
                         : AppColors.textPrimary,
                   ),
                 ),
@@ -438,7 +439,7 @@ class _RoomGridTile extends StatelessWidget {
                 isSelected ? Icons.check_circle : Icons.chevron_right,
                 size: 18,
                 color: isSelected
-                    ? AppColors.inkEmeraldAccent
+                    ? AppColors.brandPrimary
                     : AppColors.textSecondary,
               ),
             ],
