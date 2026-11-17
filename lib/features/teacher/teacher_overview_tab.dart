@@ -14,7 +14,7 @@ import '../../state/app_controller.dart';
 import '../shared/student_detail_screen.dart';
 import 'class_selection_screen.dart';
 
-/// Screen A — Focused Teacher Overview (Level 1 + Level 2 only; links to Student List).
+/// Screen A — Focused Teacher Overview (Header -> Obsidian Analytics -> Actions).
 class TeacherOverviewTab extends StatelessWidget {
   const TeacherOverviewTab({
     super.key,
@@ -34,7 +34,6 @@ class TeacherOverviewTab extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppColors.gradientGreenTop,
         titleSpacing: inset,
         title: const Row(
           children: <Widget>[
@@ -74,7 +73,7 @@ class TeacherOverviewTab extends StatelessWidget {
                         vertical: 5,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.surface.withValues(alpha: 0.85),
+                        color: AppColors.surfaceSubtle,
                         borderRadius: BorderRadius.circular(AppRadius.control),
                         border: Border.all(color: AppColors.borderSubtle),
                       ),
@@ -84,7 +83,7 @@ class TeacherOverviewTab extends StatelessWidget {
                           Text(
                             'ห้อง ${classroom.code}',
                             style: AppTypography.microLabel.copyWith(
-                              color: AppColors.brandPrimary,
+                              color: AppColors.textPrimary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -92,7 +91,7 @@ class TeacherOverviewTab extends StatelessWidget {
                           const Icon(
                             Icons.keyboard_arrow_down,
                             size: 16,
-                            color: AppColors.brandPrimary,
+                            color: AppColors.textPrimary,
                           ),
                         ],
                       ),
@@ -115,15 +114,13 @@ class TeacherOverviewTab extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  // 01. HEADER (School/Classroom context, current date, sync update indicator)
-                  Container(
-                    width: double.infinity,
-                    color: AppColors.gradientGreenTop,
+                  // 01. Context bar (Classroom hierarchy, date, sync update)
+                  Padding(
                     padding: EdgeInsets.fromLTRB(
                       inset,
-                      AppSpacing.space1,
+                      AppSpacing.space4,
                       inset,
-                      AppSpacing.space2,
+                      AppSpacing.space3,
                     ),
                     child: Wrap(
                       alignment: WrapAlignment.spaceBetween,
@@ -158,7 +155,14 @@ class TeacherOverviewTab extends StatelessWidget {
                     )
                   else if (snapshot != null) ...<Widget>[
                     if (snapshot.syncMetadata.freshness != SyncFreshness.fresh)
-                      SyncStatusBanner(syncMetadata: snapshot.syncMetadata),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: AppSpacing.space3,
+                        ),
+                        child: SyncStatusBanner(
+                          syncMetadata: snapshot.syncMetadata,
+                        ),
+                      ),
                     if (snapshot.students.isEmpty)
                       const EmptyStateView(
                         title: 'ไม่พบนักเรียนในห้องนี้',
@@ -166,7 +170,7 @@ class TeacherOverviewTab extends StatelessWidget {
                             'ยังไม่มีรายชื่อนักเรียนหรือกำหนดการเรียนในวันที่เลือก',
                       )
                     else ...<Widget>[
-                      // 02. PRIMARY METRIC + 03. DISTRIBUTION + 04. ATTENTION PREVIEW
+                      // 02. Primary Metric + 03. Distribution + 04. Attention
                       SummaryMetricStrip(
                         snapshot: snapshot,
                         onTapStudent: (student) {
@@ -186,45 +190,50 @@ class TeacherOverviewTab extends StatelessWidget {
 
                       const SizedBox(height: AppSpacing.space5),
 
-                      // 05. STUDENT LIST ENTRY & HISTORY ENTRY (Dedicated screens)
+                      // 05. Navigation actions to Student List & History
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: inset),
-                        child: Text(
-                          'การจัดการและข้อมูลเพิ่มเติม',
-                          style: AppTypography.microLabel.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.space2),
-                      Container(
-                        width: double.infinity,
-                        decoration: const BoxDecoration(
-                          color: AppColors.surface,
-                          border: Border(
-                            top: BorderSide(color: AppColors.borderSubtle),
-                            bottom: BorderSide(color: AppColors.borderSubtle),
-                          ),
-                        ),
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            _NavigationEntryRow(
-                              inset: inset,
-                              icon: Icons.people_outline,
-                              title:
-                                  'ดูรายชื่อนักเรียนทั้งห้อง (${snapshot.totalStudents} คน)',
-                              subtitle:
-                                  'ค้นหา กรองสถานะ ดูเวลาสแกนเข้า และแก้ไขสถานะรายบุคคล',
-                              onTap: () => onOpenStudentList(null),
+                            Text(
+                              'จัดการข้อมูลห้องเรียน',
+                              style: AppTypography.microLabel.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                            Divider(indent: inset, endIndent: inset),
-                            _NavigationEntryRow(
-                              inset: inset,
-                              icon: Icons.history_outlined,
-                              title: 'ดูประวัติการเข้าเรียนย้อนหลัง',
-                              subtitle:
-                                  'ตรวจสอบบันทึกการเข้าเรียนของห้องตามวันที่ย้อนหลัง',
-                              onTap: onOpenHistory,
+                            const SizedBox(height: AppSpacing.space2),
+                            Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.panel,
+                                ),
+                                border: Border.all(
+                                  color: AppColors.borderSubtle,
+                                ),
+                              ),
+                              child: Column(
+                                children: <Widget>[
+                                  _NavigationEntryRow(
+                                    icon: Icons.people_outline,
+                                    title:
+                                        'ดูรายชื่อนักเรียนทั้งห้อง (${snapshot.totalStudents} คน)',
+                                    subtitle:
+                                        'ค้นหา กรองสถานะ ดูเวลาสแกนเข้า และแก้ไขสถานะ',
+                                    onTap: () => onOpenStudentList(null),
+                                  ),
+                                  const Divider(),
+                                  _NavigationEntryRow(
+                                    icon: Icons.history_outlined,
+                                    title: 'ดูประวัติการเข้าเรียนย้อนหลัง',
+                                    subtitle:
+                                        'ตรวจสอบบันทึกการเข้าเรียนของห้องตามวันที่ย้อนหลัง',
+                                    onTap: onOpenHistory,
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -243,14 +252,12 @@ class TeacherOverviewTab extends StatelessWidget {
 
 class _NavigationEntryRow extends StatelessWidget {
   const _NavigationEntryRow({
-    required this.inset,
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.onTap,
   });
 
-  final double inset;
   final IconData icon;
   final String title;
   final String subtitle;
@@ -265,15 +272,15 @@ class _NavigationEntryRow extends StatelessWidget {
           minHeight: AppSpacing.minTouchTarget + 14,
         ),
         child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: inset,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.space4,
             vertical: AppSpacing.space3,
           ),
           child: Row(
             children: <Widget>[
               Container(
-                width: 40,
-                height: 40,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
                   color: AppColors.brandPrimarySoft,
                   borderRadius: BorderRadius.circular(AppRadius.control),

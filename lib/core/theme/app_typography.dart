@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 
-/// Editorial Thai typography scale using IBM Plex Sans Thai.
+/// High-contrast Swiss Thai typography scale using IBM Plex Sans Thai.
 abstract final class AppTypography {
   static const String fontFamily = 'IBMPlexSansThai';
   static const List<String> fontFallback = <String>[
@@ -13,10 +13,10 @@ abstract final class AppTypography {
   static const TextStyle display = TextStyle(
     fontFamily: fontFamily,
     fontFamilyFallback: fontFallback,
-    fontSize: 34,
+    fontSize: 42,
     fontWeight: FontWeight.w600,
-    height: 1.12,
-    letterSpacing: -0.5,
+    height: 1.05,
+    letterSpacing: -1.2,
     color: AppColors.textPrimary,
     fontFeatures: <FontFeature>[FontFeature.tabularFigures()],
   );
@@ -24,10 +24,10 @@ abstract final class AppTypography {
   static const TextStyle pageTitle = TextStyle(
     fontFamily: fontFamily,
     fontFamilyFallback: fontFallback,
-    fontSize: 24,
+    fontSize: 25,
     fontWeight: FontWeight.w600,
-    height: 1.24,
-    letterSpacing: -0.2,
+    height: 1.2,
+    letterSpacing: -0.35,
     color: AppColors.textPrimary,
   );
 
@@ -36,7 +36,8 @@ abstract final class AppTypography {
     fontFamilyFallback: fontFallback,
     fontSize: 17,
     fontWeight: FontWeight.w600,
-    height: 1.32,
+    height: 1.3,
+    letterSpacing: -0.15,
     color: AppColors.textPrimary,
   );
 
@@ -45,7 +46,7 @@ abstract final class AppTypography {
     fontFamilyFallback: fontFallback,
     fontSize: 15,
     fontWeight: FontWeight.w400,
-    height: 1.4,
+    height: 1.42,
     color: AppColors.textPrimary,
   );
 
@@ -54,7 +55,7 @@ abstract final class AppTypography {
     fontFamilyFallback: fontFallback,
     fontSize: 15,
     fontWeight: FontWeight.w600,
-    height: 1.4,
+    height: 1.42,
     color: AppColors.textPrimary,
   );
 

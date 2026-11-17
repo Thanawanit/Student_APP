@@ -16,7 +16,7 @@ class EditorialNavDestination {
   final String label;
 }
 
-/// Slim, quiet Swiss editorial bottom navigation bar (54 dp + bottom safe inset).
+/// Crisp Material 3 × Linear bottom navigation bar (58 dp + safe bottom inset).
 class EditorialBottomNav extends StatelessWidget {
   const EditorialBottomNav({
     super.key,
@@ -40,7 +40,7 @@ class EditorialBottomNav extends StatelessWidget {
         child: SafeArea(
           top: false,
           child: SizedBox(
-            height: 54,
+            height: 58,
             child: Row(
               children: <Widget>[
                 for (var i = 0; i < destinations.length; i++)
@@ -79,38 +79,34 @@ class _NavItem extends StatelessWidget {
       onTap: onTap,
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: AppSpacing.minTouchTarget),
-        child: Stack(
-          alignment: Alignment.center,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Positioned(
-              top: 0,
-              child: AnimatedContainer(
-                duration: AppMotion.resolve(context, AppMotion.fast),
-                curve: AppMotion.gentleCurve,
-                width: isSelected ? 28 : 0,
-                height: 2,
-                color: AppColors.brandPrimary,
+            AnimatedContainer(
+              duration: AppMotion.resolve(context, AppMotion.fast),
+              curve: AppMotion.gentleCurve,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppColors.brandPrimarySoft
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                isSelected ? destination.selectedIcon : destination.icon,
+                size: 20,
+                color: color,
               ),
             ),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Icon(
-                  isSelected ? destination.selectedIcon : destination.icon,
-                  size: 20,
-                  color: color,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  destination.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.microLabel.copyWith(
-                    color: color,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  ),
-                ),
-              ],
+            const SizedBox(height: 2),
+            Text(
+              destination.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.microLabel.copyWith(
+                color: isSelected ? AppColors.textPrimary : color,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              ),
             ),
           ],
         ),

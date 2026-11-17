@@ -8,7 +8,7 @@ import '../../domain/models/school_structure.dart';
 import '../../state/app_controller.dart';
 import 'teacher_shell_screen.dart';
 
-/// Screen D — Teacher stage -> grade -> classroom selection (editorial list rows).
+/// Screen D — Swiss Step Matrix for Stage -> Grade -> Classroom selection.
 class TeacherClassSelectionScreen extends StatefulWidget {
   const TeacherClassSelectionScreen({super.key, this.isSwitchingRoom = false});
 
@@ -73,8 +73,7 @@ class _TeacherClassSelectionScreenState
   Widget build(BuildContext context) {
     final inset = ResponsiveContent.horizontalInset(context);
     final canPopDirect = _selectedStage == null && _selectedGrade == null;
-
-    final int currentStep = _selectedStage == null
+    final currentStep = _selectedStage == null
         ? 1
         : _selectedGrade == null
         ? 2
@@ -98,185 +97,120 @@ class _TeacherClassSelectionScreenState
         ),
         body: SafeArea(
           child: ListView(
+            padding: EdgeInsets.all(inset),
             children: <Widget>[
-              // Compact Swiss breadcrumb bar
-              Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: AppColors.surfaceSubtle,
-                  border: Border(
-                    top: BorderSide(color: AppColors.borderSubtle),
-                    bottom: BorderSide(color: AppColors.borderSubtle),
-                  ),
-                ),
-                padding: EdgeInsets.symmetric(
-                  horizontal: inset,
-                  vertical: AppSpacing.space3,
-                ),
-                child: ResponsiveContent(
-                  padding: EdgeInsets.zero,
-                  child: Row(
-                    children: <Widget>[
-                      Text(
-                        'ขั้นตอน $currentStep/3',
-                        style: AppTypography.microLabel.copyWith(
-                          color: AppColors.brandPrimary,
-                          fontWeight: FontWeight.w600,
+              ResponsiveContent(
+                padding: EdgeInsets.zero,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    // Step indicator bar
+                    Row(
+                      children: <Widget>[
+                        _StepPill(
+                          number: '01',
+                          label: 'ช่วงชั้น',
+                          active: currentStep == 1,
+                          completed: currentStep > 1,
                         ),
-                      ),
-                      const SizedBox(width: AppSpacing.space3),
-                      Expanded(
-                        child: Text(
-                          _selectedStage == null
-                              ? 'เลือกช่วงชั้น'
-                              : _selectedGrade == null
-                              ? '${_selectedStage!.label} / เลือกระดับชั้น'
-                              : '${_selectedStage!.label} / ม.$_selectedGrade / เลือกห้อง',
-                          style: AppTypography.supporting.copyWith(
-                            color: AppColors.textPrimary,
-                          ),
-                          overflow: TextOverflow.ellipsis,
+                        const SizedBox(width: AppSpacing.space2),
+                        _StepPill(
+                          number: '02',
+                          label: 'ระดับชั้น',
+                          active: currentStep == 2,
+                          completed: currentStep > 2,
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              Padding(
-                padding: EdgeInsets.fromLTRB(
-                  inset,
-                  AppSpacing.space4,
-                  inset,
-                  AppSpacing.space2,
-                ),
-                child: ResponsiveContent(
-                  padding: EdgeInsets.zero,
-                  child: Wrap(
-                    alignment: WrapAlignment.spaceBetween,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: AppSpacing.space2,
-                    runSpacing: AppSpacing.space1,
-                    children: <Widget>[
-                      Text(
-                        _selectedStage == null
-                            ? 'ช่วงชั้น'
-                            : _selectedGrade == null
-                            ? 'ระดับชั้น (${_selectedStage!.label})'
-                            : 'ห้องเรียน (มัธยมศึกษาปีที่ $_selectedGrade)',
-                        style: AppTypography.sectionTitle,
-                      ),
-                      if (_selectedStage != null)
-                        TextButton(
-                          onPressed: () {
-                            setState(() {
-                              if (_selectedGrade != null) {
-                                _selectedGrade = null;
-                              } else {
-                                _selectedStage = null;
-                              }
-                            });
-                          },
-                          child: Text(
-                            _selectedGrade != null
-                                ? 'เปลี่ยนระดับชั้น'
-                                : 'เปลี่ยนช่วงชั้น',
-                          ),
+                        const SizedBox(width: AppSpacing.space2),
+                        _StepPill(
+                          number: '03',
+                          label: 'ห้องเรียน',
+                          active: currentStep == 3,
+                          completed: false,
                         ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Full-width editorial list rows
-              Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: AppColors.surface,
-                  border: Border(
-                    top: BorderSide(color: AppColors.borderSubtle),
-                    bottom: BorderSide(color: AppColors.borderSubtle),
-                  ),
-                ),
-                child: ResponsiveContent(
-                  padding: EdgeInsets.zero,
-                  child: Column(
-                    children: <Widget>[
-                      if (_selectedStage == null)
-                        for (
-                          var i = 0;
-                          i < EducationStage.values.length;
-                          i++
-                        ) ...<Widget>[
-                          _EditorialSelectionRow(
-                            inset: inset,
-                            code: '0${i + 1}',
-                            title: EducationStage.values[i].label,
-                            subtitle: EducationStage.values[i].subtitle,
-                            isSelected: false,
-                            onTap: () => setState(() {
-                              _selectedStage = EducationStage.values[i];
-                              _selectedGrade = null;
-                            }),
-                          ),
-                          if (i < EducationStage.values.length - 1)
-                            const Divider(),
-                        ]
-                      else if (_selectedGrade == null)
-                        for (
-                          var i = 0;
-                          i < _selectedStage!.grades.length;
-                          i++
-                        ) ...<Widget>[
-                          _EditorialSelectionRow(
-                            inset: inset,
-                            code: 'ม.${_selectedStage!.grades[i]}',
-                            title:
-                                'มัธยมศึกษาปีที่ ${_selectedStage!.grades[i]} (ม.${_selectedStage!.grades[i]})',
-                            subtitle:
-                                'ห้อง ${_selectedStage!.grades[i]}/1 – ${_selectedStage!.grades[i]}/${_selectedStage!.roomsPerGrade}',
-                            isSelected: false,
-                            onTap: () => setState(
-                              () => _selectedGrade = _selectedStage!.grades[i],
-                            ),
-                          ),
-                          if (i < _selectedStage!.grades.length - 1)
-                            const Divider(),
-                        ]
-                      else ...<Widget>[
-                        for (final (index, room) in ClassroomId.roomsForGrade(
-                          _selectedStage!,
-                          _selectedGrade!,
-                        ).indexed) ...<Widget>[
-                          _EditorialSelectionRow(
-                            inset: inset,
-                            code: room.code,
-                            title: room.roomLabel,
-                            subtitle: room.hierarchyLabel,
-                            isSelected:
-                                AppScope.of(context).selectedClassroom == room,
-                            onTap: () => _selectRoom(room),
-                          ),
-                          if (index < _selectedStage!.roomsPerGrade - 1)
-                            const Divider(),
-                        ],
                       ],
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: AppSpacing.space5),
+
+                    SizedBox(
+                      width: double.infinity,
+                      child: Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: AppSpacing.space2,
+                        runSpacing: AppSpacing.space1,
+                        children: <Widget>[
+                          Text(
+                            _selectedStage == null
+                                ? 'เลือกช่วงชั้น'
+                                : _selectedGrade == null
+                                ? 'ระดับชั้น (${_selectedStage!.label})'
+                                : 'ห้องเรียน (มัธยมศึกษาปีที่ $_selectedGrade)',
+                            style: AppTypography.pageTitle,
+                          ),
+                          if (_selectedStage != null)
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  if (_selectedGrade != null) {
+                                    _selectedGrade = null;
+                                  } else {
+                                    _selectedStage = null;
+                                  }
+                                });
+                              },
+                              child: Text(
+                                _selectedGrade != null
+                                    ? 'เปลี่ยนระดับชั้น'
+                                    : 'เปลี่ยนช่วงชั้น',
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.space4),
+
+                    if (_selectedStage == null)
+                      for (final stage in EducationStage.values) ...<Widget>[
+                        _StageTile(
+                          stage: stage,
+                          onTap: () => setState(() {
+                            _selectedStage = stage;
+                            _selectedGrade = null;
+                          }),
+                        ),
+                        const SizedBox(height: AppSpacing.space3),
+                      ]
+                    else if (_selectedGrade == null)
+                      _ResponsiveTileGrid(
+                        items: <Widget>[
+                          for (final grade in _selectedStage!.grades)
+                            _GradeGridTile(
+                              grade: grade,
+                              roomCount: _selectedStage!.roomsPerGrade,
+                              onTap: () =>
+                                  setState(() => _selectedGrade = grade),
+                            ),
+                        ],
+                      )
+                    else
+                      _ResponsiveTileGrid(
+                        items: <Widget>[
+                          for (final room in ClassroomId.roomsForGrade(
+                            _selectedStage!,
+                            _selectedGrade!,
+                          ))
+                            _RoomGridTile(
+                              room: room,
+                              isSelected:
+                                  AppScope.of(context).selectedClassroom ==
+                                  room,
+                              onTap: () => _selectRoom(room),
+                            ),
+                        ],
+                      ),
+                  ],
                 ),
               ),
-
-              if (_selectedStage == null)
-                Padding(
-                  padding: EdgeInsets.all(inset),
-                  child: ResponsiveContent(
-                    padding: EdgeInsets.zero,
-                    child: Text(
-                      'คุณครูสามารถเข้าดูข้อมูลการเข้าเรียนได้ทุกห้องเรียนในโรงเรียนขุนยวมวิทยา',
-                      style: AppTypography.supporting,
-                    ),
-                  ),
-                ),
             ],
           ),
         ),
@@ -285,82 +219,229 @@ class _TeacherClassSelectionScreenState
   }
 }
 
-class _EditorialSelectionRow extends StatelessWidget {
-  const _EditorialSelectionRow({
-    required this.inset,
-    required this.code,
-    required this.title,
-    required this.subtitle,
+class _StepPill extends StatelessWidget {
+  const _StepPill({
+    required this.number,
+    required this.label,
+    required this.active,
+    required this.completed,
+  });
+
+  final String number;
+  final String label;
+  final bool active;
+  final bool completed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.space2,
+          vertical: 6,
+        ),
+        decoration: BoxDecoration(
+          color: active
+              ? AppColors.inkSurface
+              : completed
+              ? AppColors.brandPrimarySoft
+              : AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.control),
+          border: Border.all(
+            color: active
+                ? AppColors.inkSurface
+                : completed
+                ? AppColors.brandPrimary.withValues(alpha: 0.3)
+                : AppColors.borderSubtle,
+          ),
+        ),
+        child: Text(
+          '$number $label',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: AppTypography.microLabel.copyWith(
+            color: active
+                ? AppColors.surface
+                : completed
+                ? AppColors.brandPrimary
+                : AppColors.textSecondary,
+            fontWeight: active || completed ? FontWeight.w600 : FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StageTile extends StatelessWidget {
+  const _StageTile({required this.stage, required this.onTap});
+
+  final EducationStage stage;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(AppRadius.panel),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.panel),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppSpacing.space5),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.panel),
+            border: Border.all(color: AppColors.borderSubtle),
+          ),
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(stage.label, style: AppTypography.sectionTitle),
+                    const SizedBox(height: 2),
+                    Text(stage.subtitle, style: AppTypography.supporting),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ResponsiveTileGrid extends StatelessWidget {
+  const _ResponsiveTileGrid({required this.items});
+
+  final List<Widget> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final effectiveWidth =
+            constraints.maxWidth / MediaQuery.textScalerOf(context).scale(1);
+        final cols = constraints.maxWidth >= 600
+            ? 3
+            : effectiveWidth >= 280
+            ? 2
+            : 1;
+        const gap = AppSpacing.space3;
+        final itemWidth = (constraints.maxWidth - (gap * (cols - 1))) / cols;
+
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: <Widget>[
+            for (final item in items) SizedBox(width: itemWidth, child: item),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _GradeGridTile extends StatelessWidget {
+  const _GradeGridTile({
+    required this.grade,
+    required this.roomCount,
+    required this.onTap,
+  });
+
+  final int grade;
+  final int roomCount;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(AppRadius.panel),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.panel),
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.space4),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.panel),
+            border: Border.all(color: AppColors.borderSubtle),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                'มัธยมศึกษาปีที่ $grade (ม.$grade)',
+                style: AppTypography.bodyStrong,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '$roomCount ห้อง ($grade/1–$grade/$roomCount)',
+                style: AppTypography.microLabel,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RoomGridTile extends StatelessWidget {
+  const _RoomGridTile({
+    required this.room,
     required this.isSelected,
     required this.onTap,
   });
 
-  final double inset;
-  final String code;
-  final String title;
-  final String subtitle;
+  final ClassroomId room;
   final bool isSelected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        color: isSelected ? AppColors.brandPrimarySoft : Colors.transparent,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            minHeight: AppSpacing.minTouchTarget + 12,
+    return Material(
+      color: isSelected ? AppColors.inkSurface : AppColors.surface,
+      borderRadius: BorderRadius.circular(AppRadius.panel),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.panel),
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.space4),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.panel),
+            border: Border.all(
+              color: isSelected ? AppColors.inkSurface : AppColors.borderSubtle,
+            ),
           ),
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: inset,
-              vertical: AppSpacing.space3,
-            ),
-            child: Row(
-              children: <Widget>[
-                SizedBox(
-                  width: 40,
-                  child: Text(
-                    code,
-                    style: AppTypography.bodyStrong.copyWith(
-                      color: isSelected
-                          ? AppColors.brandPrimary
-                          : AppColors.textSecondary,
-                      fontFeatures: const <FontFeature>[
-                        FontFeature.tabularFigures(),
-                      ],
-                    ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  room.roomLabel,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.sectionTitle.copyWith(
+                    color: isSelected
+                        ? AppColors.surface
+                        : AppColors.textPrimary,
                   ),
                 ),
-                const SizedBox(width: AppSpacing.space3),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        title,
-                        style: AppTypography.bodyStrong.copyWith(
-                          color: isSelected
-                              ? AppColors.brandPrimary
-                              : AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(subtitle, style: AppTypography.supporting),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.space2),
-                Icon(
-                  isSelected ? Icons.check_circle : Icons.chevron_right,
-                  size: 20,
-                  color: isSelected
-                      ? AppColors.brandPrimary
-                      : AppColors.textSecondary,
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(width: AppSpacing.space2),
+              Icon(
+                isSelected ? Icons.check_circle : Icons.chevron_right,
+                size: 18,
+                color: isSelected
+                    ? AppColors.inkEmeraldAccent
+                    : AppColors.textSecondary,
+              ),
+            ],
           ),
         ),
       ),

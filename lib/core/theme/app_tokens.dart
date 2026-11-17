@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Spacing, radius, border, and motion tokens refined for Swiss Editorial density.
+/// Spacing, sharp architectural radii, border, and motion tokens.
 abstract final class AppSpacing {
   static const double space1 = 4;
   static const double space2 = 8;
@@ -11,12 +11,13 @@ abstract final class AppSpacing {
   static const double space8 = 32;
 
   static const double minTouchTarget = 48;
-  static const double maxContentWidth = 920;
+  static const double maxContentWidth = 960;
 }
 
 abstract final class AppRadius {
+  static const double badge = 6;
   static const double control = 8;
-  static const double panel = 10;
+  static const double panel = 12;
   static const double sheet = 16;
 }
 

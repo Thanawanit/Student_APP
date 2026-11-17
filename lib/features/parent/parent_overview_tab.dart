@@ -7,14 +7,13 @@ import '../../core/utils/responsive_layout.dart';
 import '../../core/utils/thai_date_format.dart';
 import '../../domain/models/attendance_models.dart';
 import '../../domain/models/attendance_status.dart';
-import '../../shared/widgets/dashboard_gradient_header.dart';
 import '../../shared/widgets/school_brand_mark.dart';
 import '../../shared/widgets/state_views.dart';
 import '../../shared/widgets/status_chip.dart';
 import '../../state/app_controller.dart';
 import '../shared/student_detail_screen.dart';
 
-/// Screen A — Focused Parent Overview (strictly 1–3 history preview; full history on separate tab).
+/// Screen A — Apple Wallet-inspired Obsidian Pass + Swiss Weekly & 3-Record History Preview.
 class ParentOverviewTab extends StatelessWidget {
   const ParentOverviewTab({
     super.key,
@@ -38,7 +37,6 @@ class ParentOverviewTab extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppColors.gradientGreenTop,
         titleSpacing: inset,
         title: const Row(
           children: <Widget>[
@@ -71,7 +69,12 @@ class ParentOverviewTab extends StatelessWidget {
         onRefresh: controller.loadParentData,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(bottom: AppSpacing.space6),
+          padding: EdgeInsets.fromLTRB(
+            inset,
+            AppSpacing.space4,
+            inset,
+            AppSpacing.space6,
+          ),
           children: <Widget>[
             ResponsiveContent(
               padding: EdgeInsets.zero,
@@ -86,7 +89,6 @@ class ParentOverviewTab extends StatelessWidget {
                   ? const EmptyStateView(title: 'ยังไม่มีข้อมูลนักเรียน')
                   : isExpanded
                   ? _ExpandedParentOverview(
-                      inset: inset,
                       record: record,
                       todayDate: controller.todayDate,
                       latestNotification: latestNotification,
@@ -95,7 +97,6 @@ class ParentOverviewTab extends StatelessWidget {
                       onOpenNotifications: onOpenNotifications,
                     )
                   : _CompactParentOverview(
-                      inset: inset,
                       record: record,
                       todayDate: controller.todayDate,
                       latestNotification: latestNotification,
@@ -113,7 +114,6 @@ class ParentOverviewTab extends StatelessWidget {
 
 class _ExpandedParentOverview extends StatelessWidget {
   const _ExpandedParentOverview({
-    required this.inset,
     required this.record,
     required this.todayDate,
     required this.latestNotification,
@@ -122,7 +122,6 @@ class _ExpandedParentOverview extends StatelessWidget {
     required this.onOpenNotifications,
   });
 
-  final double inset;
   final StudentAttendanceRecord record;
   final DateTime todayDate;
   final ParentNotificationItem? latestNotification;
@@ -135,73 +134,37 @@ class _ExpandedParentOverview extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        // 01. STUDENT IDENTITY + 02. TODAY'S ATTENDANCE
-        DashboardGradientBand(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              inset,
-              AppSpacing.space3,
-              inset,
-              AppSpacing.space5,
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                Expanded(flex: 6, child: _StudentIdentityBlock(record: record)),
-                const SizedBox(width: AppSpacing.space5),
-                Container(width: 1, height: 68, color: AppColors.borderSubtle),
-                const SizedBox(width: AppSpacing.space5),
-                Expanded(
-                  flex: 6,
-                  child: _TodayStatusContent(entry: record.todayEntry),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        // 03. WEEKLY SUMMARY + 04. LATEST NOTIFICATION | 05. HISTORY PREVIEW (max 3)
-        Padding(
-          padding: EdgeInsets.fromLTRB(inset, AppSpacing.space5, inset, 0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Expanded(
-                flex: 6,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    _WeeklySummaryBlock(
-                      record: record,
-                      todayDate: todayDate,
-                      horizontalPadding: 0,
-                      borderedPanel: true,
+        _ObsidianStudentPass(record: record, isWide: true),
+        const SizedBox(height: AppSpacing.space5),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Expanded(
+              flex: 6,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  _WeeklySummaryBlock(record: record, todayDate: todayDate),
+                  if (latestNotification != null) ...<Widget>[
+                    const SizedBox(height: AppSpacing.space4),
+                    _NotificationPreviewPanel(
+                      notification: latestNotification!,
+                      unreadCount: unreadCount,
+                      onTap: onOpenNotifications,
                     ),
-                    if (latestNotification != null) ...<Widget>[
-                      const SizedBox(height: AppSpacing.space4),
-                      _NotificationPreviewStrip(
-                        notification: latestNotification!,
-                        unreadCount: unreadCount,
-                        horizontalPadding: AppSpacing.space4,
-                        bordered: true,
-                        onTap: onOpenNotifications,
-                      ),
-                    ],
                   ],
-                ),
+                ],
               ),
-              const SizedBox(width: AppSpacing.space5),
-              Expanded(
-                flex: 6,
-                child: _HistoryPreviewBlock(
-                  record: record,
-                  horizontalPadding: 0,
-                  borderedPanel: true,
-                  onOpenFullHistory: onOpenFullHistory,
-                ),
+            ),
+            const SizedBox(width: AppSpacing.space5),
+            Expanded(
+              flex: 6,
+              child: _HistoryPreviewBlock(
+                record: record,
+                onOpenFullHistory: onOpenFullHistory,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ],
     );
@@ -210,7 +173,6 @@ class _ExpandedParentOverview extends StatelessWidget {
 
 class _CompactParentOverview extends StatelessWidget {
   const _CompactParentOverview({
-    required this.inset,
     required this.record,
     required this.todayDate,
     required this.latestNotification,
@@ -219,7 +181,6 @@ class _CompactParentOverview extends StatelessWidget {
     required this.onOpenNotifications,
   });
 
-  final double inset;
   final StudentAttendanceRecord record;
   final DateTime todayDate;
   final ParentNotificationItem? latestNotification;
@@ -232,55 +193,26 @@ class _CompactParentOverview extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        // 01. STUDENT IDENTITY + 02. TODAY'S ATTENDANCE
-        DashboardGradientBand(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              inset,
-              AppSpacing.space2,
-              inset,
-              AppSpacing.space4,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                _StudentIdentityBlock(record: record),
-                const SizedBox(height: AppSpacing.space3),
-                const Divider(),
-                const SizedBox(height: AppSpacing.space3),
-                _TodayStatusContent(entry: record.todayEntry),
-              ],
-            ),
-          ),
-        ),
-
-        // 03. WEEKLY SUMMARY
+        // 01 & 02. Student Identity + Today's Attendance Pass
+        _ObsidianStudentPass(record: record, isWide: false),
         const SizedBox(height: AppSpacing.space4),
-        _WeeklySummaryBlock(
-          record: record,
-          todayDate: todayDate,
-          horizontalPadding: inset,
-          borderedPanel: false,
-        ),
 
-        // 04. LATEST NOTIFICATION
+        // 03. Weekly Summary
+        _WeeklySummaryBlock(record: record, todayDate: todayDate),
         if (latestNotification != null) ...<Widget>[
-          const SizedBox(height: AppSpacing.space3),
-          _NotificationPreviewStrip(
+          const SizedBox(height: AppSpacing.space4),
+          // 04. Latest Notification
+          _NotificationPreviewPanel(
             notification: latestNotification!,
             unreadCount: unreadCount,
-            horizontalPadding: inset,
-            bordered: false,
             onTap: onOpenNotifications,
           ),
         ],
-
-        // 05. ATTENDANCE HISTORY PREVIEW (strictly 3 latest records)
         const SizedBox(height: AppSpacing.space5),
+
+        // 05. Attendance History Preview (strictly 3 latest records)
         _HistoryPreviewBlock(
           record: record,
-          horizontalPadding: inset,
-          borderedPanel: false,
           onOpenFullHistory: onOpenFullHistory,
         ),
       ],
@@ -288,42 +220,15 @@ class _CompactParentOverview extends StatelessWidget {
   }
 }
 
-class _StudentIdentityBlock extends StatelessWidget {
-  const _StudentIdentityBlock({required this.record});
+class _ObsidianStudentPass extends StatelessWidget {
+  const _ObsidianStudentPass({required this.record, required this.isWide});
 
   final StudentAttendanceRecord record;
+  final bool isWide;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(
-          record.classroom.hierarchyLabel,
-          style: AppTypography.supporting.copyWith(
-            color: AppColors.brandPrimary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(record.fullName, style: AppTypography.pageTitle),
-        const SizedBox(height: 2),
-        Text(
-          'รหัสนักเรียน ${ThaiFormat.maskStudentId(record.studentId)}',
-          style: AppTypography.supporting,
-        ),
-      ],
-    );
-  }
-}
-
-class _TodayStatusContent extends StatelessWidget {
-  const _TodayStatusContent({required this.entry});
-
-  final DailyAttendanceEntry entry;
-
-  @override
-  Widget build(BuildContext context) {
+    final entry = record.todayEntry;
     final String headline = switch (entry.status) {
       AttendanceStatus.present => 'ถึงโรงเรียนแล้ว (ตรงเวลา)',
       AttendanceStatus.late => 'ถึงโรงเรียนแล้ว (มาสาย)',
@@ -333,61 +238,106 @@ class _TodayStatusContent extends StatelessWidget {
       AttendanceStatus.unknown => 'อยู่ระหว่างตรวจสอบข้อมูล',
     };
 
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(
-          left: BorderSide(color: entry.status.foregroundColor, width: 3),
+    final identityWidget = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(
+          '${record.classroom.hierarchyLabel} • รหัส ${ThaiFormat.maskStudentId(record.studentId)}',
+          style: AppTypography.supporting.copyWith(
+            color: AppColors.inkTextMuted,
+          ),
         ),
-      ),
-      padding: const EdgeInsets.only(left: AppSpacing.space3),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            'สถานะวันนี้ • ${ThaiFormat.fullDate(entry.date)}',
-            style: AppTypography.microLabel.copyWith(
-              color: AppColors.textSecondary,
-            ),
+        const SizedBox(height: 4),
+        Text(
+          record.fullName,
+          style: AppTypography.pageTitle.copyWith(color: AppColors.inkText),
+        ),
+      ],
+    );
+
+    final statusWidget = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(
+          'สถานะวันนี้ • ${ThaiFormat.fullDate(entry.date)}',
+          style: AppTypography.microLabel.copyWith(
+            color: AppColors.inkTextMuted,
           ),
-          const SizedBox(height: AppSpacing.space2),
-          Wrap(
-            spacing: AppSpacing.space3,
-            runSpacing: AppSpacing.space2,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: <Widget>[
-              AttendanceStatusChip(status: entry.status),
-              if (entry.firstScanAt != null)
-                Text(
-                  ThaiFormat.time24(entry.firstScanAt!),
-                  style: AppTypography.pageTitle.copyWith(
-                    fontFeatures: const <FontFeature>[
-                      FontFeature.tabularFigures(),
-                    ],
-                  ),
+        ),
+        const SizedBox(height: AppSpacing.space2),
+        Wrap(
+          spacing: AppSpacing.space3,
+          runSpacing: AppSpacing.space2,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: <Widget>[
+            AttendanceStatusChip(status: entry.status),
+            if (entry.firstScanAt != null)
+              Text(
+                ThaiFormat.time24(entry.firstScanAt!),
+                style: AppTypography.pageTitle.copyWith(
+                  color: AppColors.inkText,
+                  fontFeatures: const <FontFeature>[
+                    FontFeature.tabularFigures(),
+                  ],
                 ),
-            ],
+              ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.space2),
+        Text(
+          headline,
+          style: AppTypography.bodyStrong.copyWith(color: AppColors.inkText),
+        ),
+        Text(
+          entry.status.detailDescription,
+          style: AppTypography.supporting.copyWith(
+            color: AppColors.inkTextMuted,
           ),
-          const SizedBox(height: AppSpacing.space2),
-          Text(headline, style: AppTypography.bodyStrong),
-          Text(entry.status.detailDescription, style: AppTypography.supporting),
-        ],
+        ),
+      ],
+    );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.space5),
+      decoration: BoxDecoration(
+        color: AppColors.inkSurface,
+        borderRadius: BorderRadius.circular(AppRadius.panel),
       ),
+      child: isWide
+          ? Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Expanded(flex: 5, child: identityWidget),
+                const SizedBox(width: AppSpacing.space5),
+                Container(
+                  width: 1,
+                  height: 76,
+                  color: AppColors.inkSurfaceDivider,
+                ),
+                const SizedBox(width: AppSpacing.space5),
+                Expanded(flex: 7, child: statusWidget),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                identityWidget,
+                const SizedBox(height: AppSpacing.space4),
+                Container(height: 1, color: AppColors.inkSurfaceDivider),
+                const SizedBox(height: AppSpacing.space4),
+                statusWidget,
+              ],
+            ),
     );
   }
 }
 
 class _WeeklySummaryBlock extends StatelessWidget {
-  const _WeeklySummaryBlock({
-    required this.record,
-    required this.todayDate,
-    required this.horizontalPadding,
-    required this.borderedPanel,
-  });
+  const _WeeklySummaryBlock({required this.record, required this.todayDate});
 
   final StudentAttendanceRecord record;
   final DateTime todayDate;
-  final double horizontalPadding;
-  final bool borderedPanel;
 
   @override
   Widget build(BuildContext context) {
@@ -398,20 +348,17 @@ class _WeeklySummaryBlock extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-          child: SizedBox(
-            width: double.infinity,
-            child: Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: AppSpacing.space2,
-              runSpacing: 2,
-              children: <Widget>[
-                Text('สรุปสัปดาห์นี้', style: AppTypography.sectionTitle),
-                Text(summary.weekLabel, style: AppTypography.microLabel),
-              ],
-            ),
+        SizedBox(
+          width: double.infinity,
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: AppSpacing.space2,
+            runSpacing: 2,
+            children: <Widget>[
+              Text('สรุปสัปดาห์นี้', style: AppTypography.sectionTitle),
+              Text(summary.weekLabel, style: AppTypography.microLabel),
+            ],
           ),
         ),
         const SizedBox(height: AppSpacing.space2),
@@ -419,15 +366,11 @@ class _WeeklySummaryBlock extends StatelessWidget {
           width: double.infinity,
           decoration: BoxDecoration(
             color: AppColors.surface,
-            border: borderedPanel
-                ? Border.all(color: AppColors.borderSubtle)
-                : const Border(
-                    top: BorderSide(color: AppColors.borderSubtle),
-                    bottom: BorderSide(color: AppColors.borderSubtle),
-                  ),
+            borderRadius: BorderRadius.circular(AppRadius.panel),
+            border: Border.all(color: AppColors.borderSubtle),
           ),
-          padding: EdgeInsets.symmetric(
-            horizontal: borderedPanel ? AppSpacing.space3 : horizontalPadding,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.space3,
             vertical: AppSpacing.space3,
           ),
           child: Column(
@@ -512,43 +455,35 @@ class _WeeklySummaryBlock extends StatelessWidget {
 class _HistoryPreviewBlock extends StatelessWidget {
   const _HistoryPreviewBlock({
     required this.record,
-    required this.horizontalPadding,
-    required this.borderedPanel,
     required this.onOpenFullHistory,
   });
 
   final StudentAttendanceRecord record;
-  final double horizontalPadding;
-  final bool borderedPanel;
   final VoidCallback onOpenFullHistory;
 
   @override
   Widget build(BuildContext context) {
     final previewItems = record.history.take(3).toList();
-    final rowPadding = borderedPanel ? AppSpacing.space4 : horizontalPadding;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-          child: SizedBox(
-            width: double.infinity,
-            child: Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: AppSpacing.space2,
-              children: <Widget>[
-                Text(
-                  'ประวัติการเข้าเรียนล่าสุด',
-                  style: AppTypography.sectionTitle,
-                ),
-                TextButton(
-                  onPressed: onOpenFullHistory,
-                  child: const Text('ดูประวัติทั้งหมด'),
-                ),
-              ],
-            ),
+        SizedBox(
+          width: double.infinity,
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: AppSpacing.space2,
+            children: <Widget>[
+              Text(
+                'ประวัติการเข้าเรียนล่าสุด',
+                style: AppTypography.sectionTitle,
+              ),
+              TextButton(
+                onPressed: onOpenFullHistory,
+                child: const Text('ดูประวัติทั้งหมด'),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: AppSpacing.space1),
@@ -556,12 +491,8 @@ class _HistoryPreviewBlock extends StatelessWidget {
           width: double.infinity,
           decoration: BoxDecoration(
             color: AppColors.surface,
-            border: borderedPanel
-                ? Border.all(color: AppColors.borderSubtle)
-                : const Border(
-                    top: BorderSide(color: AppColors.borderSubtle),
-                    bottom: BorderSide(color: AppColors.borderSubtle),
-                  ),
+            borderRadius: BorderRadius.circular(AppRadius.panel),
+            border: Border.all(color: AppColors.borderSubtle),
           ),
           child: Column(
             children: <Widget>[
@@ -583,8 +514,8 @@ class _HistoryPreviewBlock extends StatelessWidget {
                       minHeight: AppSpacing.minTouchTarget + 8,
                     ),
                     child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: rowPadding,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.space4,
                         vertical: 10,
                       ),
                       child: Row(
@@ -626,8 +557,7 @@ class _HistoryPreviewBlock extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (i < previewItems.length - 1)
-                  Divider(indent: rowPadding, endIndent: rowPadding),
+                if (i < previewItems.length - 1) const Divider(),
               ],
             ],
           ),
@@ -657,7 +587,7 @@ class _WeekDayIndicator extends StatelessWidget {
             color: status != null
                 ? status.backgroundColor
                 : AppColors.surfaceSubtle,
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(AppRadius.badge),
           ),
           child: Icon(
             status != null ? status.icon : Icons.remove,
@@ -672,39 +602,33 @@ class _WeekDayIndicator extends StatelessWidget {
   }
 }
 
-class _NotificationPreviewStrip extends StatelessWidget {
-  const _NotificationPreviewStrip({
+class _NotificationPreviewPanel extends StatelessWidget {
+  const _NotificationPreviewPanel({
     required this.notification,
     required this.unreadCount,
-    required this.horizontalPadding,
-    required this.bordered,
     required this.onTap,
   });
 
   final ParentNotificationItem notification;
   final int unreadCount;
-  final double horizontalPadding;
-  final bool bordered;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.surface,
+      borderRadius: BorderRadius.circular(AppRadius.panel),
       child: InkWell(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.panel),
         child: Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            border: bordered
-                ? Border.all(color: AppColors.borderSubtle)
-                : const Border(
-                    top: BorderSide(color: AppColors.borderSubtle),
-                    bottom: BorderSide(color: AppColors.borderSubtle),
-                  ),
+            borderRadius: BorderRadius.circular(AppRadius.panel),
+            border: Border.all(color: AppColors.borderSubtle),
           ),
-          padding: EdgeInsets.symmetric(
-            horizontal: horizontalPadding,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.space4,
             vertical: AppSpacing.space3,
           ),
           child: Row(

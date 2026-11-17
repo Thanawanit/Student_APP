@@ -44,14 +44,15 @@ abstract final class AppTheme {
         labelSmall: AppTypography.microLabel,
       ),
       appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.surface,
         foregroundColor: AppColors.textPrimary,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-        toolbarHeight: 52,
+        toolbarHeight: 54,
         centerTitle: false,
         titleTextStyle: AppTypography.sectionTitle,
+        shape: Border(bottom: BorderSide(color: AppColors.borderSubtle)),
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: Brightness.dark,
@@ -88,7 +89,7 @@ abstract final class AppTheme {
             if (states.contains(WidgetState.pressed)) {
               return AppColors.brandPrimaryPressed;
             }
-            return AppColors.brandPrimary;
+            return AppColors.inkSurface;
           }),
           foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
             if (states.contains(WidgetState.disabled)) {
@@ -123,7 +124,7 @@ abstract final class AppTheme {
               return const BorderSide(color: AppColors.focusRing, width: 1.5);
             }
             return const BorderSide(
-              color: AppColors.borderSubtle,
+              color: AppColors.borderStrong,
               width: AppBorders.width,
             );
           }),
@@ -169,20 +170,23 @@ abstract final class AppTheme {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.control),
           borderSide: const BorderSide(
-            color: AppColors.borderSubtle,
+            color: AppColors.borderStrong,
             width: AppBorders.width,
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.control),
           borderSide: const BorderSide(
-            color: AppColors.borderSubtle,
+            color: AppColors.borderStrong,
             width: AppBorders.width,
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.control),
-          borderSide: const BorderSide(color: AppColors.focusRing, width: 1.5),
+          borderSide: const BorderSide(
+            color: AppColors.brandPrimary,
+            width: 1.5,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.control),
@@ -221,7 +225,7 @@ abstract final class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.textPrimary,
+        backgroundColor: AppColors.inkSurface,
         contentTextStyle: AppTypography.body.copyWith(color: AppColors.surface),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.control),

@@ -1,49 +1,46 @@
 import 'package:flutter/material.dart';
 
-/// Color tokens aligned with ATTENDANCE_APP_DESIGN_SYSTEM.md (Section 3.1).
+/// Refined Swiss Editorial × Modern Analytics color system.
 abstract final class AppColors {
-  static const Color background = Color(0xFFF7F7F4);
+  static const Color background = Color(0xFFF5F6F4);
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color surfaceSubtle = Color(0xFFF0F1EE);
+  static const Color surfaceSubtle = Color(0xFFECEEEB);
 
-  static const Color textPrimary = Color(0xFF202624);
-  static const Color textSecondary = Color(0xFF69716D);
-  static const Color textDisabled = Color(0xFF9AA19D);
+  // Architectural dark-ink surface for hero command/pass sections and primary CTAs.
+  static const Color inkSurface = Color(0xFF131B18);
+  static const Color inkSurfaceDivider = Color(0xFF283530);
+  static const Color inkText = Color(0xFFF7F8F7);
+  static const Color inkTextMuted = Color(0xFFA3B2AB);
+  static const Color inkEmeraldAccent = Color(0xFF34D399);
 
-  static const Color borderSubtle = Color(0xFFE3E7E2);
+  static const Color textPrimary = Color(0xFF141917);
+  static const Color textSecondary = Color(0xFF5B6460);
+  static const Color textDisabled = Color(0xFF9AA29E);
 
-  static const Color brandPrimary = Color(0xFF31566D);
-  static const Color brandPrimaryPressed = Color(0xFF254456);
-  static const Color brandPrimarySoft = Color(0xFFEAF0F4);
-  static const Color focusRing = Color(0xFF5B83A0);
+  static const Color borderSubtle = Color(0xFFE1E4DF);
+  static const Color borderStrong = Color(0xFFC9CEC7);
 
-  // Subtle top-to-bottom botanical green-to-white gradient tokens for dashboard headers.
-  static const Color gradientGreenTop = Color(0xFFD9EDE1);
-  static const Color gradientGreenMid = Color(0xFFEDF6F0);
-
-  static const LinearGradient topGreenToWhiteGradient = LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: <Color>[gradientGreenTop, gradientGreenMid, background],
-    stops: <double>[0.0, 0.55, 1.0],
-  );
+  static const Color brandPrimary = Color(0xFF165E42);
+  static const Color brandPrimaryPressed = Color(0xFF0F442F);
+  static const Color brandPrimarySoft = Color(0xFFE6F2EC);
+  static const Color focusRing = Color(0xFF248A62);
 
   // Attendance semantic colors (always paired with Thai text & icon).
-  static const Color presentForeground = Color(0xFF287451);
-  static const Color presentBackground = Color(0xFFEAF4EE);
+  static const Color presentForeground = Color(0xFF156D47);
+  static const Color presentBackground = Color(0xFFE6F4ED);
 
-  static const Color lateForeground = Color(0xFF98621F);
-  static const Color lateBackground = Color(0xFFFFF3E2);
+  static const Color lateForeground = Color(0xFFA35B0E);
+  static const Color lateBackground = Color(0xFFFEF2E0);
 
-  static const Color absentForeground = Color(0xFFA94444);
-  static const Color absentBackground = Color(0xFFFBECEC);
+  static const Color absentForeground = Color(0xFFB43434);
+  static const Color absentBackground = Color(0xFFFDECEC);
 
-  static const Color leaveForeground = Color(0xFF59659A);
-  static const Color leaveBackground = Color(0xFFEEF0FA);
+  static const Color leaveForeground = Color(0xFF435399);
+  static const Color leaveBackground = Color(0xFFECEFFA);
 
-  static const Color pendingForeground = Color(0xFF68716F);
-  static const Color pendingBackground = Color(0xFFF0F2F1);
+  static const Color pendingForeground = Color(0xFF56605D);
+  static const Color pendingBackground = Color(0xFFECEDEC);
 
-  static const Color unknownForeground = Color(0xFF606A78);
-  static const Color unknownBackground = Color(0xFFEEF1F5);
+  static const Color unknownForeground = Color(0xFF4C596B);
+  static const Color unknownBackground = Color(0xFFEBF0F5);
 }
