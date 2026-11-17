@@ -12,7 +12,9 @@ import '../shared/student_detail_screen.dart';
 
 /// Parent notification list identifying student, changed status, date/time, and info.
 class ParentNotificationsScreen extends StatelessWidget {
-  const ParentNotificationsScreen({super.key});
+  const ParentNotificationsScreen({super.key, this.isEmbedded = false});
+
+  final bool isEmbedded;
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +24,10 @@ class ParentNotificationsScreen extends StatelessWidget {
     final inset = ResponsiveContent.horizontalInset(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('การแจ้งเตือน')),
+      appBar: AppBar(
+        automaticallyImplyLeading: !isEmbedded,
+        title: const Text('การแจ้งเตือน'),
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.only(bottom: AppSpacing.space6),

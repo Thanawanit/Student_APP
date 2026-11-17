@@ -13,14 +13,17 @@ import '../../shared/widgets/state_views.dart';
 import '../../shared/widgets/status_chip.dart';
 import '../../state/app_controller.dart';
 import '../shared/student_detail_screen.dart';
-import 'parent_history_section.dart';
-import 'parent_notifications_screen.dart';
 
-/// Dashboard-First Parent Overview (Level 1 Today -> Level 2 Weekly & Updates -> Level 3 History).
+/// Screen A — Focused Parent Overview (strictly 1–3 history preview; full history on separate tab).
 class ParentOverviewTab extends StatelessWidget {
-  const ParentOverviewTab({super.key, this.onOpenFullHistory});
+  const ParentOverviewTab({
+    super.key,
+    required this.onOpenFullHistory,
+    required this.onOpenNotifications,
+  });
 
-  final VoidCallback? onOpenFullHistory;
+  final VoidCallback onOpenFullHistory;
+  final VoidCallback onOpenNotifications;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +34,7 @@ class ParentOverviewTab extends StatelessWidget {
         ? controller.parentNotifications.first
         : null;
     final inset = ResponsiveContent.horizontalInset(context);
-    final isWideDesktop = MediaQuery.sizeOf(context).width >= 760;
+    final isExpanded = MediaQuery.sizeOf(context).width >= 840;
 
     return Scaffold(
       appBar: AppBar(
@@ -52,13 +55,7 @@ class ParentOverviewTab extends StatelessWidget {
         actions: <Widget>[
           IconButton(
             tooltip: 'การแจ้งเตือน',
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const ParentNotificationsScreen(),
-                ),
-              );
-            },
+            onPressed: onOpenNotifications,
             icon: Badge.count(
               count: unread,
               isLabelVisible: unread > 0,
@@ -87,21 +84,24 @@ class ParentOverviewTab extends StatelessWidget {
                     )
                   : record == null
                   ? const EmptyStateView(title: 'ยังไม่มีข้อมูลนักเรียน')
-                  : isWideDesktop
-                  ? _DesktopParentLayout(
-                      inset: inset,
-                      record: record,
-                      todayDate: controller.todayDate,
-                      latestNotification: latestNotification,
-                      unreadCount: unread,
-                    )
-                  : _MobileParentLayout(
+                  : isExpanded
+                  ? _ExpandedParentOverview(
                       inset: inset,
                       record: record,
                       todayDate: controller.todayDate,
                       latestNotification: latestNotification,
                       unreadCount: unread,
                       onOpenFullHistory: onOpenFullHistory,
+                      onOpenNotifications: onOpenNotifications,
+                    )
+                  : _CompactParentOverview(
+                      inset: inset,
+                      record: record,
+                      todayDate: controller.todayDate,
+                      latestNotification: latestNotification,
+                      unreadCount: unread,
+                      onOpenFullHistory: onOpenFullHistory,
+                      onOpenNotifications: onOpenNotifications,
                     ),
             ),
           ],
@@ -111,13 +111,15 @@ class ParentOverviewTab extends StatelessWidget {
   }
 }
 
-class _DesktopParentLayout extends StatelessWidget {
-  const _DesktopParentLayout({
+class _ExpandedParentOverview extends StatelessWidget {
+  const _ExpandedParentOverview({
     required this.inset,
     required this.record,
     required this.todayDate,
     required this.latestNotification,
     required this.unreadCount,
+    required this.onOpenFullHistory,
+    required this.onOpenNotifications,
   });
 
   final double inset;
@@ -125,13 +127,15 @@ class _DesktopParentLayout extends StatelessWidget {
   final DateTime todayDate;
   final ParentNotificationItem? latestNotification;
   final int unreadCount;
+  final VoidCallback onOpenFullHistory;
+  final VoidCallback onOpenNotifications;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        // LEVEL 1: Full-width Green-to-White Gradient Hero (Identity + Today's Attendance)
+        // 01. STUDENT IDENTITY + 02. TODAY'S ATTENDANCE
         DashboardGradientBand(
           child: Padding(
             padding: EdgeInsets.fromLTRB(
@@ -156,14 +160,14 @@ class _DesktopParentLayout extends StatelessWidget {
           ),
         ),
 
-        // LEVEL 2 & LEVEL 3 side-by-side
+        // 03. WEEKLY SUMMARY + 04. LATEST NOTIFICATION | 05. HISTORY PREVIEW (max 3)
         Padding(
           padding: EdgeInsets.fromLTRB(inset, AppSpacing.space5, inset, 0),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Expanded(
-                flex: 5,
+                flex: 6,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
@@ -180,18 +184,20 @@ class _DesktopParentLayout extends StatelessWidget {
                         unreadCount: unreadCount,
                         horizontalPadding: AppSpacing.space4,
                         bordered: true,
+                        onTap: onOpenNotifications,
                       ),
                     ],
                   ],
                 ),
               ),
-              const SizedBox(width: AppSpacing.space6),
+              const SizedBox(width: AppSpacing.space5),
               Expanded(
-                flex: 7,
-                child: ParentHistorySection(
+                flex: 6,
+                child: _HistoryPreviewBlock(
                   record: record,
-                  todayDate: todayDate,
-                  useContainerInset: false,
+                  horizontalPadding: 0,
+                  borderedPanel: true,
+                  onOpenFullHistory: onOpenFullHistory,
                 ),
               ),
             ],
@@ -202,14 +208,15 @@ class _DesktopParentLayout extends StatelessWidget {
   }
 }
 
-class _MobileParentLayout extends StatelessWidget {
-  const _MobileParentLayout({
+class _CompactParentOverview extends StatelessWidget {
+  const _CompactParentOverview({
     required this.inset,
     required this.record,
     required this.todayDate,
     required this.latestNotification,
     required this.unreadCount,
-    this.onOpenFullHistory,
+    required this.onOpenFullHistory,
+    required this.onOpenNotifications,
   });
 
   final double inset;
@@ -217,16 +224,15 @@ class _MobileParentLayout extends StatelessWidget {
   final DateTime todayDate;
   final ParentNotificationItem? latestNotification;
   final int unreadCount;
-  final VoidCallback? onOpenFullHistory;
+  final VoidCallback onOpenFullHistory;
+  final VoidCallback onOpenNotifications;
 
   @override
   Widget build(BuildContext context) {
-    final recentItems = record.history.take(5).toList();
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        // LEVEL 1: Identity + Today's Attendance on top-to-bottom green-to-white gradient
+        // 01. STUDENT IDENTITY + 02. TODAY'S ATTENDANCE
         DashboardGradientBand(
           child: Padding(
             padding: EdgeInsets.fromLTRB(
@@ -248,7 +254,7 @@ class _MobileParentLayout extends StatelessWidget {
           ),
         ),
 
-        // LEVEL 2: Weekly summary + 5-day trend + Important notification
+        // 03. WEEKLY SUMMARY
         const SizedBox(height: AppSpacing.space4),
         _WeeklySummaryBlock(
           record: record,
@@ -256,6 +262,8 @@ class _MobileParentLayout extends StatelessWidget {
           horizontalPadding: inset,
           borderedPanel: false,
         ),
+
+        // 04. LATEST NOTIFICATION
         if (latestNotification != null) ...<Widget>[
           const SizedBox(height: AppSpacing.space3),
           _NotificationPreviewStrip(
@@ -263,114 +271,17 @@ class _MobileParentLayout extends StatelessWidget {
             unreadCount: unreadCount,
             horizontalPadding: inset,
             bordered: false,
+            onTap: onOpenNotifications,
           ),
         ],
 
-        // LEVEL 3: Concise recent attendance history (does not dominate initial screen)
-        Padding(
-          padding: EdgeInsets.fromLTRB(
-            inset,
-            AppSpacing.space5,
-            inset,
-            AppSpacing.space2,
-          ),
-          child: SizedBox(
-            width: double.infinity,
-            child: Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: AppSpacing.space2,
-              children: <Widget>[
-                Text(
-                  'ประวัติการเข้าเรียนล่าสุด',
-                  style: AppTypography.sectionTitle,
-                ),
-                if (onOpenFullHistory != null)
-                  TextButton(
-                    onPressed: onOpenFullHistory,
-                    child: const Text('ดูทั้งหมด / กรองรายเดือน'),
-                  ),
-              ],
-            ),
-          ),
-        ),
-        Container(
-          width: double.infinity,
-          decoration: const BoxDecoration(
-            color: AppColors.surface,
-            border: Border(
-              top: BorderSide(color: AppColors.borderSubtle),
-              bottom: BorderSide(color: AppColors.borderSubtle),
-            ),
-          ),
-          child: Column(
-            children: <Widget>[
-              for (var i = 0; i < recentItems.length; i++) ...<Widget>[
-                InkWell(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => StudentDetailScreen(
-                          studentId: record.studentId,
-                          initialDate: recentItems[i].date,
-                          isReadOnly: true,
-                        ),
-                      ),
-                    );
-                  },
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      minHeight: AppSpacing.minTouchTarget + 8,
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: inset,
-                        vertical: 10,
-                      ),
-                      child: Row(
-                        children: <Widget>[
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                Text(
-                                  ThaiFormat.fullDate(recentItems[i].date),
-                                  style: AppTypography.bodyStrong,
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  recentItems[i].firstScanAt != null
-                                      ? 'สแกนเข้า ${ThaiFormat.time24(recentItems[i].firstScanAt!)}'
-                                      : recentItems[i].status ==
-                                            AttendanceStatus.pending
-                                      ? 'ยังไม่พบการสแกน • รอยืนยัน'
-                                      : 'ไม่มีบันทึกเวลาสแกน',
-                                  style: AppTypography.microLabel,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.space2),
-                          AttendanceStatusChip(
-                            status: recentItems[i].status,
-                            compact: true,
-                          ),
-                          const SizedBox(width: AppSpacing.space1),
-                          const Icon(
-                            Icons.chevron_right,
-                            size: 18,
-                            color: AppColors.textDisabled,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                if (i < recentItems.length - 1)
-                  Divider(indent: inset, endIndent: inset),
-              ],
-            ],
-          ),
+        // 05. ATTENDANCE HISTORY PREVIEW (strictly 3 latest records)
+        const SizedBox(height: AppSpacing.space5),
+        _HistoryPreviewBlock(
+          record: record,
+          horizontalPadding: inset,
+          borderedPanel: false,
+          onOpenFullHistory: onOpenFullHistory,
         ),
       ],
     );
@@ -564,7 +475,7 @@ class _WeeklySummaryBlock extends StatelessWidget {
               const SizedBox(height: AppSpacing.space2),
               Row(
                 children: <Widget>[
-                  for (var d = 0; d < 5; d++) ...<Widget>[
+                  for (var d = 0; d < 5; d++)
                     Expanded(
                       child: _WeekDayIndicator(
                         dayLabel: dayLabels[d],
@@ -574,7 +485,6 @@ class _WeeklySummaryBlock extends StatelessWidget {
                         ),
                       ),
                     ),
-                  ],
                 ],
               ),
             ],
@@ -596,6 +506,134 @@ class _WeeklySummaryBlock extends StatelessWidget {
       }
     }
     return null;
+  }
+}
+
+class _HistoryPreviewBlock extends StatelessWidget {
+  const _HistoryPreviewBlock({
+    required this.record,
+    required this.horizontalPadding,
+    required this.borderedPanel,
+    required this.onOpenFullHistory,
+  });
+
+  final StudentAttendanceRecord record;
+  final double horizontalPadding;
+  final bool borderedPanel;
+  final VoidCallback onOpenFullHistory;
+
+  @override
+  Widget build(BuildContext context) {
+    final previewItems = record.history.take(3).toList();
+    final rowPadding = borderedPanel ? AppSpacing.space4 : horizontalPadding;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+          child: SizedBox(
+            width: double.infinity,
+            child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: AppSpacing.space2,
+              children: <Widget>[
+                Text(
+                  'ประวัติการเข้าเรียนล่าสุด',
+                  style: AppTypography.sectionTitle,
+                ),
+                TextButton(
+                  onPressed: onOpenFullHistory,
+                  child: const Text('ดูประวัติทั้งหมด'),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.space1),
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            border: borderedPanel
+                ? Border.all(color: AppColors.borderSubtle)
+                : const Border(
+                    top: BorderSide(color: AppColors.borderSubtle),
+                    bottom: BorderSide(color: AppColors.borderSubtle),
+                  ),
+          ),
+          child: Column(
+            children: <Widget>[
+              for (var i = 0; i < previewItems.length; i++) ...<Widget>[
+                InkWell(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => StudentDetailScreen(
+                          studentId: record.studentId,
+                          initialDate: previewItems[i].date,
+                          isReadOnly: true,
+                        ),
+                      ),
+                    );
+                  },
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      minHeight: AppSpacing.minTouchTarget + 8,
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: rowPadding,
+                        vertical: 10,
+                      ),
+                      child: Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Text(
+                                  ThaiFormat.fullDate(previewItems[i].date),
+                                  style: AppTypography.bodyStrong,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  previewItems[i].firstScanAt != null
+                                      ? 'สแกนเข้า ${ThaiFormat.time24(previewItems[i].firstScanAt!)}'
+                                      : previewItems[i].status ==
+                                            AttendanceStatus.pending
+                                      ? 'ยังไม่พบการสแกน • รอยืนยัน'
+                                      : 'ไม่มีบันทึกเวลาสแกน',
+                                  style: AppTypography.microLabel,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.space2),
+                          AttendanceStatusChip(
+                            status: previewItems[i].status,
+                            compact: true,
+                          ),
+                          const SizedBox(width: AppSpacing.space1),
+                          const Icon(
+                            Icons.chevron_right,
+                            size: 18,
+                            color: AppColors.textDisabled,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                if (i < previewItems.length - 1)
+                  Divider(indent: rowPadding, endIndent: rowPadding),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -640,25 +678,21 @@ class _NotificationPreviewStrip extends StatelessWidget {
     required this.unreadCount,
     required this.horizontalPadding,
     required this.bordered,
+    required this.onTap,
   });
 
   final ParentNotificationItem notification;
   final int unreadCount;
   final double horizontalPadding;
   final bool bordered;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.surface,
       child: InkWell(
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => const ParentNotificationsScreen(),
-            ),
-          );
-        },
+        onTap: onTap,
         child: Container(
           width: double.infinity,
           decoration: BoxDecoration(

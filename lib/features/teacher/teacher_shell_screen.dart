@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
-import '../../shared/widgets/editorial_bottom_nav.dart';
+import '../../domain/models/attendance_status.dart';
+import '../../shared/widgets/adaptive_shell.dart';
+import '../../state/app_controller.dart';
 import 'teacher_account_tab.dart';
 import 'teacher_history_tab.dart';
 import 'teacher_overview_tab.dart';
+import 'teacher_students_tab.dart';
 
-/// Main Teacher shell with slim editorial bottom bar: ภาพรวม, ประวัติ, บัญชี.
+/// Adaptive Teacher shell: Overview, Student List, History, Account.
 class TeacherShellScreen extends StatefulWidget {
   const TeacherShellScreen({super.key});
 
@@ -15,39 +18,61 @@ class TeacherShellScreen extends StatefulWidget {
 
 class _TeacherShellScreenState extends State<TeacherShellScreen> {
   int _selectedIndex = 0;
+  AttendanceStatus? _requestedListFilter;
+  int _filterRevision = 0;
+
+  void _openStudentList([AttendanceStatus? filter]) {
+    setState(() {
+      _requestedListFilter = filter;
+      _filterRevision++;
+      _selectedIndex = 1;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: const <Widget>[
-          TeacherOverviewTab(),
-          TeacherHistoryTab(),
-          TeacherAccountTab(),
-        ],
-      ),
-      bottomNavigationBar: EditorialBottomNav(
-        selectedIndex: _selectedIndex,
-        onSelected: (index) => setState(() => _selectedIndex = index),
-        destinations: const <EditorialNavDestination>[
-          EditorialNavDestination(
-            icon: Icons.fact_check_outlined,
-            selectedIcon: Icons.fact_check,
-            label: 'ภาพรวม',
-          ),
-          EditorialNavDestination(
-            icon: Icons.history_outlined,
-            selectedIcon: Icons.history,
-            label: 'ประวัติ',
-          ),
-          EditorialNavDestination(
-            icon: Icons.person_outline,
-            selectedIcon: Icons.person,
-            label: 'บัญชี',
-          ),
-        ],
-      ),
+    final controller = AppScope.of(context);
+    final classroom = controller.selectedClassroom;
+
+    return AdaptiveNavigationShell(
+      selectedIndex: _selectedIndex,
+      onSelected: (index) => setState(() => _selectedIndex = index),
+      roleTitle: 'โหมดคุณครู',
+      contextSubtitle: classroom?.hierarchyLabel,
+      destinations: const <AdaptiveDestination>[
+        AdaptiveDestination(
+          icon: Icons.dashboard_outlined,
+          selectedIcon: Icons.dashboard,
+          label: 'ภาพรวม',
+        ),
+        AdaptiveDestination(
+          icon: Icons.people_outline,
+          selectedIcon: Icons.people,
+          label: 'รายชื่อ',
+        ),
+        AdaptiveDestination(
+          icon: Icons.history_outlined,
+          selectedIcon: Icons.history,
+          label: 'ประวัติ',
+        ),
+        AdaptiveDestination(
+          icon: Icons.person_outline,
+          selectedIcon: Icons.person,
+          label: 'บัญชี',
+        ),
+      ],
+      children: <Widget>[
+        TeacherOverviewTab(
+          onOpenStudentList: _openStudentList,
+          onOpenHistory: () => setState(() => _selectedIndex = 2),
+        ),
+        TeacherStudentsTab(
+          requestedFilter: _requestedListFilter,
+          filterRevision: _filterRevision,
+        ),
+        const TeacherHistoryTab(),
+        const TeacherAccountTab(),
+      ],
     );
   }
 }

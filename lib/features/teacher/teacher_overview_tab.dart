@@ -7,34 +7,23 @@ import '../../core/utils/responsive_layout.dart';
 import '../../core/utils/thai_date_format.dart';
 import '../../domain/models/attendance_models.dart';
 import '../../domain/models/attendance_status.dart';
-import '../../shared/widgets/filter_chip_bar.dart';
 import '../../shared/widgets/school_brand_mark.dart';
 import '../../shared/widgets/state_views.dart';
-import '../../shared/widgets/student_attendance_row.dart';
 import '../../shared/widgets/summary_metric_strip.dart';
 import '../../state/app_controller.dart';
 import '../shared/student_detail_screen.dart';
 import 'class_selection_screen.dart';
 
-/// Screen E — Dashboard-First Teacher Attendance Overview.
-/// Level 1 (Immediate Overview) -> Level 2 (Progress & Attention) -> Level 3 (Student List).
-class TeacherOverviewTab extends StatefulWidget {
-  const TeacherOverviewTab({super.key});
+/// Screen A — Focused Teacher Overview (Level 1 + Level 2 only; links to Student List).
+class TeacherOverviewTab extends StatelessWidget {
+  const TeacherOverviewTab({
+    super.key,
+    required this.onOpenStudentList,
+    required this.onOpenHistory,
+  });
 
-  @override
-  State<TeacherOverviewTab> createState() => _TeacherOverviewTabState();
-}
-
-class _TeacherOverviewTabState extends State<TeacherOverviewTab> {
-  final TextEditingController _searchController = TextEditingController();
-  AttendanceStatus? _statusFilter;
-  String _searchQuery = '';
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
+  final ValueChanged<AttendanceStatus?> onOpenStudentList;
+  final VoidCallback onOpenHistory;
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +31,6 @@ class _TeacherOverviewTabState extends State<TeacherOverviewTab> {
     final classroom = controller.selectedClassroom;
     final snapshot = controller.classroomSnapshot;
     final inset = ResponsiveContent.horizontalInset(context);
-    final isWide = MediaQuery.sizeOf(context).width >= 760;
 
     return Scaffold(
       appBar: AppBar(
@@ -127,7 +115,7 @@ class _TeacherOverviewTabState extends State<TeacherOverviewTab> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  // Compact context bar integrated into the green top wash
+                  // 01. HEADER (School/Classroom context, current date, sync update indicator)
                   Container(
                     width: double.infinity,
                     color: AppColors.gradientGreenTop,
@@ -178,7 +166,7 @@ class _TeacherOverviewTabState extends State<TeacherOverviewTab> {
                             'ยังไม่มีรายชื่อนักเรียนหรือกำหนดการเรียนในวันที่เลือก',
                       )
                     else ...<Widget>[
-                      // LEVEL 1 + LEVEL 2: Overview, Progress Visualization & Attention
+                      // 02. PRIMARY METRIC + 03. DISTRIBUTION + 04. ATTENTION PREVIEW
                       SummaryMetricStrip(
                         snapshot: snapshot,
                         onTapStudent: (student) {
@@ -192,56 +180,54 @@ class _TeacherOverviewTabState extends State<TeacherOverviewTab> {
                             ),
                           );
                         },
-                        onFilterAttention: (status) {
-                          setState(() => _statusFilter = status);
-                        },
+                        onFilterAttention: (status) =>
+                            onOpenStudentList(status),
                       ),
 
-                      const SizedBox(height: AppSpacing.space4),
+                      const SizedBox(height: AppSpacing.space5),
 
-                      // LEVEL 3: Detailed Classroom Student List
+                      // 05. STUDENT LIST ENTRY & HISTORY ENTRY (Dedicated screens)
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: inset),
+                        child: Text(
+                          'การจัดการและข้อมูลเพิ่มเติม',
+                          style: AppTypography.microLabel.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.space2),
+                      Container(
+                        width: double.infinity,
+                        decoration: const BoxDecoration(
+                          color: AppColors.surface,
+                          border: Border(
+                            top: BorderSide(color: AppColors.borderSubtle),
+                            bottom: BorderSide(color: AppColors.borderSubtle),
+                          ),
+                        ),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            Text(
-                              'รายชื่อนักเรียนทั้งห้อง',
-                              style: AppTypography.sectionTitle,
+                            _NavigationEntryRow(
+                              inset: inset,
+                              icon: Icons.people_outline,
+                              title:
+                                  'ดูรายชื่อนักเรียนทั้งห้อง (${snapshot.totalStudents} คน)',
+                              subtitle:
+                                  'ค้นหา กรองสถานะ ดูเวลาสแกนเข้า และแก้ไขสถานะรายบุคคล',
+                              onTap: () => onOpenStudentList(null),
                             ),
-                            const SizedBox(height: AppSpacing.space3),
-                            _OverviewToolbar(
-                              isWide: isWide,
-                              searchController: _searchController,
-                              searchQuery: _searchQuery,
-                              onSearchChanged: (value) {
-                                setState(() => _searchQuery = value.trim());
-                              },
-                              onClearSearch: () {
-                                _searchController.clear();
-                                setState(() => _searchQuery = '');
-                              },
-                              snapshot: snapshot,
-                              statusFilter: _statusFilter,
-                              onFilterChanged: (value) {
-                                setState(() => _statusFilter = value);
-                              },
+                            Divider(indent: inset, endIndent: inset),
+                            _NavigationEntryRow(
+                              inset: inset,
+                              icon: Icons.history_outlined,
+                              title: 'ดูประวัติการเข้าเรียนย้อนหลัง',
+                              subtitle:
+                                  'ตรวจสอบบันทึกการเข้าเรียนของห้องตามวันที่ย้อนหลัง',
+                              onTap: onOpenHistory,
                             ),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: AppSpacing.space3),
-                      _FilteredStudentLedger(
-                        snapshot: snapshot,
-                        statusFilter: _statusFilter,
-                        searchQuery: _searchQuery,
-                        onResetFilters: () {
-                          _searchController.clear();
-                          setState(() {
-                            _statusFilter = null;
-                            _searchQuery = '';
-                          });
-                        },
                       ),
                     ],
                   ],
@@ -255,240 +241,66 @@ class _TeacherOverviewTabState extends State<TeacherOverviewTab> {
   }
 }
 
-class _OverviewToolbar extends StatelessWidget {
-  const _OverviewToolbar({
-    required this.isWide,
-    required this.searchController,
-    required this.searchQuery,
-    required this.onSearchChanged,
-    required this.onClearSearch,
-    required this.snapshot,
-    required this.statusFilter,
-    required this.onFilterChanged,
+class _NavigationEntryRow extends StatelessWidget {
+  const _NavigationEntryRow({
+    required this.inset,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
   });
 
-  final bool isWide;
-  final TextEditingController searchController;
-  final String searchQuery;
-  final ValueChanged<String> onSearchChanged;
-  final VoidCallback onClearSearch;
-  final ClassroomAttendanceSnapshot snapshot;
-  final AttendanceStatus? statusFilter;
-  final ValueChanged<AttendanceStatus?> onFilterChanged;
+  final double inset;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final searchField = TextField(
-      controller: searchController,
-      style: AppTypography.body,
-      onChanged: onSearchChanged,
-      decoration: InputDecoration(
-        hintText: 'ค้นหาชื่อหรือเลขประจำตัวนักเรียน',
-        prefixIcon: const Icon(
-          Icons.search,
-          size: 20,
-          color: AppColors.textSecondary,
+    return InkWell(
+      onTap: onTap,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          minHeight: AppSpacing.minTouchTarget + 14,
         ),
-        suffixIcon: searchQuery.isEmpty
-            ? null
-            : IconButton(
-                tooltip: 'ล้างคำค้นหา',
-                onPressed: onClearSearch,
-                icon: const Icon(Icons.close, size: 18),
-              ),
-      ),
-    );
-
-    final filterBar = StatusFilterBar(
-      selectedStatus: statusFilter,
-      totalCount: snapshot.totalStudents,
-      countsByStatus: <AttendanceStatus, int>{
-        AttendanceStatus.present: snapshot.presentCount,
-        AttendanceStatus.late: snapshot.lateCount,
-        AttendanceStatus.absent: snapshot.absentCount,
-        AttendanceStatus.leave: snapshot.leaveCount,
-        AttendanceStatus.pending: snapshot.pendingCount,
-        AttendanceStatus.unknown: snapshot.unknownCount,
-      },
-      availableStatuses: <AttendanceStatus>[
-        AttendanceStatus.present,
-        AttendanceStatus.late,
-        AttendanceStatus.absent,
-        AttendanceStatus.leave,
-        if (snapshot.pendingCount > 0 || snapshot.isBeforeCutoff)
-          AttendanceStatus.pending,
-        if (snapshot.unknownCount > 0) AttendanceStatus.unknown,
-      ],
-      onChanged: onFilterChanged,
-    );
-
-    if (isWide) {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          SizedBox(width: 280, child: searchField),
-          const SizedBox(width: AppSpacing.space4),
-          Expanded(
-            child: Align(alignment: Alignment.centerRight, child: filterBar),
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: inset,
+            vertical: AppSpacing.space3,
           ),
-        ],
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        searchField,
-        const SizedBox(height: AppSpacing.space2),
-        filterBar,
-      ],
-    );
-  }
-}
-
-class _FilteredStudentLedger extends StatelessWidget {
-  const _FilteredStudentLedger({
-    required this.snapshot,
-    required this.statusFilter,
-    required this.searchQuery,
-    required this.onResetFilters,
-  });
-
-  final ClassroomAttendanceSnapshot snapshot;
-  final AttendanceStatus? statusFilter;
-  final String searchQuery;
-  final VoidCallback onResetFilters;
-
-  @override
-  Widget build(BuildContext context) {
-    final inset = ResponsiveContent.horizontalInset(context);
-    final isDesktop = MediaQuery.sizeOf(context).width >= 640;
-
-    final students = snapshot.students.where((student) {
-      final matchesStatus =
-          statusFilter == null || student.todayEntry.status == statusFilter;
-      final query = searchQuery.toLowerCase();
-      final matchesQuery =
-          query.isEmpty ||
-          student.fullName.toLowerCase().contains(query) ||
-          student.studentId.toLowerCase().contains(query);
-      return matchesStatus && matchesQuery;
-    }).toList();
-
-    if (students.isEmpty) {
-      return EmptyStateView(
-        icon: Icons.filter_list_off_outlined,
-        title: 'ไม่พบนักเรียนที่ตรงกับตัวกรอง',
-        description: 'ลองล้างคำค้นหาหรือเลือกดูสถานะทั้งหมด',
-        actionLabel: 'แสดงทั้งหมด',
-        onAction: onResetFilters,
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        if (isDesktop)
-          Container(
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              color: AppColors.surfaceSubtle,
-              border: Border(
-                top: BorderSide(color: AppColors.borderSubtle),
-                bottom: BorderSide(color: AppColors.borderSubtle),
-              ),
-            ),
-            padding: EdgeInsets.symmetric(horizontal: inset, vertical: 8),
-            child: Row(
-              children: <Widget>[
-                SizedBox(
-                  width: 28,
-                  child: Text('#', style: AppTypography.microLabel),
-                ),
-                const SizedBox(width: AppSpacing.space2),
-                Expanded(
-                  child: Text(
-                    'รายชื่อนักเรียน (${students.length})',
-                    style: AppTypography.microLabel,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.space3),
-                SizedBox(
-                  width: 84,
-                  child: Text('รหัส', style: AppTypography.microLabel),
-                ),
-                const SizedBox(width: AppSpacing.space3),
-                SizedBox(
-                  width: 72,
-                  child: Text(
-                    'เวลาสแกน',
-                    textAlign: TextAlign.right,
-                    style: AppTypography.microLabel,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.space4),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(minWidth: 112),
-                  child: Text(
-                    'สถานะ',
-                    textAlign: TextAlign.right,
-                    style: AppTypography.microLabel,
-                  ),
-                ),
-                const SizedBox(width: 26),
-              ],
-            ),
-          )
-        else
-          Padding(
-            padding: EdgeInsets.fromLTRB(inset, 0, inset, AppSpacing.space2),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Text(
-                  'แสดงผล ${students.length} จาก ${snapshot.totalStudents} คน',
-                  style: AppTypography.microLabel,
-                ),
-              ],
-            ),
-          ),
-
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            border: Border(
-              top: isDesktop
-                  ? BorderSide.none
-                  : const BorderSide(color: AppColors.borderSubtle),
-              bottom: const BorderSide(color: AppColors.borderSubtle),
-            ),
-          ),
-          child: Column(
+          child: Row(
             children: <Widget>[
-              for (var i = 0; i < students.length; i++) ...<Widget>[
-                StudentAttendanceRow(
-                  record: students[i],
-                  entry: students[i].todayEntry,
-                  sequenceNumber: i + 1,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => StudentDetailScreen(
-                          studentId: students[i].studentId,
-                          initialDate: snapshot.date,
-                          isReadOnly: false,
-                        ),
-                      ),
-                    );
-                  },
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.brandPrimarySoft,
+                  borderRadius: BorderRadius.circular(AppRadius.control),
                 ),
-                if (i < students.length - 1)
-                  Divider(indent: inset, endIndent: inset),
-              ],
+                child: Icon(icon, color: AppColors.brandPrimary, size: 20),
+              ),
+              const SizedBox(width: AppSpacing.space3),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(title, style: AppTypography.bodyStrong),
+                    const SizedBox(height: 2),
+                    Text(subtitle, style: AppTypography.supporting),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.space2),
+              const Icon(
+                Icons.chevron_right,
+                size: 20,
+                color: AppColors.textSecondary,
+              ),
             ],
           ),
         ),
-      ],
+      ),
     );
   }
 }

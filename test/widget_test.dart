@@ -1,6 +1,7 @@
 import 'package:attendance_app/app.dart';
 import 'package:attendance_app/data/sample_attendance_repository.dart';
 import 'package:attendance_app/features/teacher/teacher_overview_tab.dart';
+import 'package:attendance_app/features/teacher/teacher_students_tab.dart';
 import 'package:attendance_app/state/app_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -26,7 +27,7 @@ void main() {
   );
 
   testWidgets(
-    'Teacher flow navigates stage -> grade -> room -> overview -> edit',
+    'Teacher IA: Overview separates summary from dedicated Student List and supports editing',
     (tester) async {
       await tester.pumpWidget(
         AttendanceApp(controller: createTestController()),
@@ -55,26 +56,36 @@ void main() {
       await tester.tap(find.text('ห้อง 5/2'));
       await tester.pumpAndSettle();
 
-      // Screen E: Dashboard-First Class Overview
+      // Screen A: Teacher Overview (no full 12-student table here)
       expect(
         find.textContaining('มัธยมศึกษาตอนปลาย / ม.5 / ห้อง 5/2'),
-        findsOneWidget,
+        findsWidgets,
       );
       expect(find.textContaining('จาก 12 คน'), findsOneWidget);
       expect(find.text('75%'), findsOneWidget);
-      expect(find.text('รายชื่อนักเรียนทั้งห้อง'), findsOneWidget);
+      expect(find.text('สแกนเข้าโรงเรียนแล้ว'), findsOneWidget);
+      expect(find.text('ดูรายชื่อนักเรียนทั้งห้อง (12 คน)'), findsOneWidget);
 
-      // Open student 3 detail (index 2 in featured room: รอยืนยัน)
-      final overviewFinder = find.byType(TeacherOverviewTab);
-      final studentFinder = find
-          .descendant(of: overviewFinder, matching: find.text('ภูริช แสงทอง'))
-          .last;
+      // Open dedicated Student List screen
+      await tester.ensureVisible(
+        find.text('ดูรายชื่อนักเรียนทั้งห้อง (12 คน)'),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('ดูรายชื่อนักเรียนทั้งห้อง (12 คน)'));
+      await tester.pumpAndSettle();
+
+      // Screen B: Dedicated Student List
+      final studentsTabFinder = find.byType(TeacherStudentsTab);
+      final studentFinder = find.descendant(
+        of: studentsTabFinder,
+        matching: find.text('ภูริช แสงทอง'),
+      );
       await tester.ensureVisible(studentFinder);
       await tester.pumpAndSettle();
       await tester.tap(studentFinder);
       await tester.pumpAndSettle();
 
-      // Screen G -> Screen H: Edit status with confirmation dialog
+      // Student Detail -> Edit Status -> Confirm
       await tester.tap(find.text('แก้ไขสถานะ'));
       await tester.pumpAndSettle();
 
@@ -95,7 +106,7 @@ void main() {
   );
 
   testWidgets(
-    'Parent flow is strictly read-only, shows history month filter and notifications',
+    'Parent IA: Overview shows 3-item preview and navigates to dedicated History & Notifications',
     (tester) async {
       await tester.pumpWidget(
         AttendanceApp(controller: createTestController()),
@@ -113,27 +124,30 @@ void main() {
       expect(find.text('สรุปสัปดาห์นี้'), findsOneWidget);
       expect(find.text('สัปดาห์ 16–20 พ.ย. 2569'), findsOneWidget);
       expect(find.text('รอยืนยัน'), findsWidgets);
-      expect(find.text('ทุกเดือน'), findsWidgets);
-      expect(find.text('ต.ค. 2569'), findsWidgets);
+      expect(find.text('ดูประวัติทั้งหมด'), findsOneWidget);
       expect(find.text('แก้ไขสถานะ'), findsNothing);
 
-      // Filter history by October month on Parent Dashboard
+      // Navigate to dedicated Parent History screen and filter by October
+      await tester.ensureVisible(find.text('ดูประวัติทั้งหมด'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('ดูประวัติทั้งหมด'));
+      await tester.pumpAndSettle();
+
       await tester.ensureVisible(find.text('ต.ค. 2569').first);
       await tester.pumpAndSettle();
       await tester.tap(find.text('ต.ค. 2569').first);
       await tester.pumpAndSettle();
       expect(find.textContaining('ตุลาคม 2569'), findsWidgets);
 
-      // Open Parent Notifications screen
-      await tester.tap(find.byTooltip('การแจ้งเตือน'));
+      // Open Parent Notifications screen via navigation rail/bar
+      await tester.tap(find.text('แจ้งเตือน').first);
       await tester.pumpAndSettle();
-      expect(find.text('การแจ้งเตือน'), findsOneWidget);
       expect(find.textContaining('ภูริช แสงทอง'), findsWidgets);
     },
   );
 
   testWidgets(
-    'Desktop 1100dp width renders Teacher Overview and Parent Dashboard cleanly',
+    'Expanded 1100dp Windows layout renders sidebar and multi-column overview cleanly',
     (tester) async {
       tester.view.physicalSize = const Size(1100, 800);
       tester.view.devicePixelRatio = 1.0;
@@ -153,13 +167,36 @@ void main() {
       await tester.tap(find.text('เข้าสู่ระบบ'));
       await tester.pumpAndSettle();
 
-      expect(find.text('ธนกฤต รัตนโชติ'), findsOneWidget);
-      expect(find.text('วันที่'), findsOneWidget);
+      expect(find.text('โหมดผู้ปกครอง'), findsOneWidget);
+      expect(find.text('ธนกฤต รัตนโชติ'), findsWidgets);
+      expect(find.text('ดูประวัติทั้งหมด'), findsOneWidget);
     },
   );
 
+  testWidgets('Medium 700dp tablet width renders NavigationRail cleanly', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(700, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(AttendanceApp(controller: createTestController()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('เข้าสู่ระบบผู้ปกครอง'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), '650101');
+    await tester.tap(find.text('เข้าสู่ระบบ'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(NavigationRail), findsOneWidget);
+  });
+
   testWidgets(
-    'Compact 360dp width with 1.4x font scaling renders without overflow',
+    'Compact 360dp width with 1.4x font scaling renders Teacher Overview without overflow',
     (tester) async {
       tester.view.physicalSize = const Size(360, 640);
       tester.view.devicePixelRatio = 1.0;
@@ -176,9 +213,6 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(tester.takeException(), isNull);
-
-      // Navigate into Teacher Overview at compact 360dp + 1.4x text scaling.
       await tester.tap(find.text('เข้าสู่ระบบคุณครู'));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('กรอกบัญชีคุณครูตัวอย่าง'));
@@ -202,12 +236,13 @@ void main() {
       await tester.tap(find.text('ห้อง 5/2'));
       await tester.pumpAndSettle();
 
+      expect(find.byType(TeacherOverviewTab), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
 
   testWidgets(
-    'Compact 360dp mobile Parent Dashboard prioritizes today status and compact history',
+    'Compact 360dp mobile Parent Overview prioritizes today status and compact preview',
     (tester) async {
       tester.view.physicalSize = const Size(360, 640);
       tester.view.devicePixelRatio = 1.0;
@@ -230,7 +265,7 @@ void main() {
       expect(find.text('ธนกฤต รัตนโชติ'), findsOneWidget);
       expect(find.text('ถึงโรงเรียนแล้ว (ตรงเวลา)'), findsOneWidget);
       expect(find.text('สรุปสัปดาห์นี้'), findsOneWidget);
-      expect(find.text('ดูทั้งหมด / กรองรายเดือน'), findsOneWidget);
+      expect(find.text('ดูประวัติทั้งหมด'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

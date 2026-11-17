@@ -264,10 +264,16 @@ class _HeroAttendanceProgress extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  'มาเรียนและมาสายวันนี้',
+                  'สแกนเข้าโรงเรียนแล้ว',
                   style: AppTypography.supporting.copyWith(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  'มาเรียน ${snapshot.presentCount} คน • มาสาย ${snapshot.lateCount} คน',
+                  style: AppTypography.microLabel.copyWith(
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 Text(stateLabel, style: AppTypography.microLabel),
@@ -420,13 +426,15 @@ class _AttentionSection extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              if (remaining > 0 && onFilterAttention != null)
+              if (onFilterAttention != null)
                 InkWell(
                   onTap: () => onFilterAttention!(primaryStatus),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 2),
                     child: Text(
-                      'กรองดู +อีก $remaining คน',
+                      remaining > 0
+                          ? 'ดูทั้งหมด (+อีก $remaining คน)'
+                          : 'เปิดในรายชื่อนักเรียน',
                       style: AppTypography.microLabel.copyWith(
                         color: AppColors.brandPrimary,
                         fontWeight: FontWeight.w600,
