@@ -140,31 +140,31 @@ class _WhiteHeroBentoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final segments = <(int, Color)>[
-      (presentCount, const Color(0xFF16A34A)),
-      (lateCount, const Color(0xFFF59E0B)),
-      (leaveOrAbsentCount, const Color(0xFF3B82F6)),
-      (pendingCount, const Color(0xFFE2E8F0)),
+      (presentCount, const Color(0xFF059669)),
+      (lateCount, const Color(0xFFD97706)),
+      (leaveOrAbsentCount, const Color(0xFF475569)),
+      (pendingCount, const Color(0xFFE4E4E7)),
     ].where((s) => s.$1 > 0).toList();
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: const Color(0xFFFFFFFF),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E8E4), width: 1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE4E4E7), width: 1),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          // 1. Top Row
+          // 1. Editorial / Fintech Top Metric Row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,13 +175,13 @@ class _WhiteHeroBentoCard extends StatelessWidget {
                   children: <Widget>[
                     Text(
                       'สแกนเข้าเรียนแล้ว',
-                      style: AppTypography.supporting.copyWith(
-                        fontSize: 13,
+                      style: AppTypography.microLabel.copyWith(
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF64748B),
+                        color: const Color(0xFF71717A),
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     Semantics(
                       label:
                           'สแกนเข้าเรียนแล้ว $checkedIn จาก $total คน คิดเป็นร้อยละ $ratePercent',
@@ -191,18 +191,22 @@ class _WhiteHeroBentoCard extends StatelessWidget {
                             TextSpan(
                               text: '$checkedIn',
                               style: AppTypography.display.copyWith(
-                                fontSize: 40,
+                                fontSize: 38,
                                 fontWeight: FontWeight.w800,
-                                color: const Color(0xFF0F172A),
-                                height: 1.05,
+                                color: const Color(0xFF09090B),
+                                letterSpacing: -1.2,
+                                height: 1.0,
+                                fontFeatures: const <FontFeature>[
+                                  FontFeature.tabularFigures(),
+                                ],
                               ),
                             ),
                             TextSpan(
                               text: ' / $total คน',
                               style: AppTypography.sectionTitle.copyWith(
-                                fontSize: 16,
+                                fontSize: 15,
                                 fontWeight: FontWeight.w500,
-                                color: const Color(0xFF64748B),
+                                color: const Color(0xFF71717A),
                                 fontFeatures: const <FontFeature>[
                                   FontFeature.tabularFigures(),
                                 ],
@@ -212,14 +216,14 @@ class _WhiteHeroBentoCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     Text(
                       'ตัดรอบเวลา 09:00\u00A0น.',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.microLabel.copyWith(
                         fontSize: 12,
-                        color: const Color(0xFF94A3B8),
+                        color: const Color(0xFFA1A1AA),
                       ),
                     ),
                   ],
@@ -229,35 +233,50 @@ class _WhiteHeroBentoCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
-                  vertical: 8,
+                  vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFDCFCE7),
-                  borderRadius: BorderRadius.circular(12),
+                  color: const Color(0xFFFAFAFA),
+                  border: Border.all(color: const Color(0xFFE4E4E7), width: 1),
+                  borderRadius: BorderRadius.circular(99),
                 ),
-                child: Text(
-                  '$ratePercent%',
-                  style: AppTypography.sectionTitle.copyWith(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF15803D),
-                    fontFeatures: const <FontFeature>[
-                      FontFeature.tabularFigures(),
-                    ],
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Container(
+                      width: 7,
+                      height: 7,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF059669),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '$ratePercent%',
+                      style: AppTypography.sectionTitle.copyWith(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF09090B),
+                        fontFeatures: const <FontFeature>[
+                          FontFeature.tabularFigures(),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
 
-          // 2. iOS-Style Segmented Horizontal Bar
+          // 2. Razor-Thin Sophisticated Segmented Bar
           ClipRRect(
-            borderRadius: BorderRadius.circular(99),
+            borderRadius: BorderRadius.circular(4),
             child: SizedBox(
-              height: 10,
+              height: 5,
               child: segments.isEmpty
-                  ? Container(color: const Color(0xFFE2E8F0))
+                  ? Container(color: const Color(0xFFE4E4E7))
                   : Row(
                       children: <Widget>[
                         for (var i = 0; i < segments.length; i++) ...<Widget>[
@@ -272,59 +291,72 @@ class _WhiteHeroBentoCard extends StatelessWidget {
                     ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
 
-          // 3. Crisp 2x2 Metric Grid
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: _MetricGridCell(
-                  dotColor: const Color(0xFF16A34A),
-                  label: 'มาเรียน',
-                  count: presentCount,
-                  onTap: onTapStatus != null
-                      ? () => onTapStatus!(AttendanceStatus.present)
-                      : null,
+          // 3. Stripe/Vercel-Style Hairline Metric Grid
+          const Divider(height: 1, thickness: 1, color: Color(0xFFF4F4F5)),
+          IntrinsicHeight(
+            child: Row(
+              children: <Widget>[
+                Expanded(
+                  child: _MetricGridCell(
+                    accentColor: const Color(0xFF059669),
+                    label: 'มาเรียน',
+                    count: presentCount,
+                    onTap: onTapStatus != null
+                        ? () => onTapStatus!(AttendanceStatus.present)
+                        : null,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _MetricGridCell(
-                  dotColor: const Color(0xFFF59E0B),
-                  label: 'มาสาย',
-                  count: lateCount,
-                  onTap: onTapStatus != null
-                      ? () => onTapStatus!(AttendanceStatus.late)
-                      : null,
+                const VerticalDivider(
+                  width: 1,
+                  thickness: 1,
+                  color: Color(0xFFF4F4F5),
                 ),
-              ),
-            ],
+                Expanded(
+                  child: _MetricGridCell(
+                    accentColor: const Color(0xFFD97706),
+                    label: 'มาสาย',
+                    count: lateCount,
+                    onTap: onTapStatus != null
+                        ? () => onTapStatus!(AttendanceStatus.late)
+                        : null,
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: _MetricGridCell(
-                  dotColor: const Color(0xFF94A3B8),
-                  label: 'รอยืนยัน',
-                  count: pendingCount,
-                  onTap: onTapStatus != null
-                      ? () => onTapStatus!(AttendanceStatus.pending)
-                      : null,
+          const Divider(height: 1, thickness: 1, color: Color(0xFFF4F4F5)),
+          IntrinsicHeight(
+            child: Row(
+              children: <Widget>[
+                Expanded(
+                  child: _MetricGridCell(
+                    accentColor: const Color(0xFFA1A1AA),
+                    label: 'รอยืนยัน',
+                    count: pendingCount,
+                    onTap: onTapStatus != null
+                        ? () => onTapStatus!(AttendanceStatus.pending)
+                        : null,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _MetricGridCell(
-                  dotColor: const Color(0xFF3B82F6),
-                  label: 'ลา / ขาด',
-                  count: leaveOrAbsentCount,
-                  onTap: onTapStatus != null
-                      ? () => onTapStatus!(AttendanceStatus.leave)
-                      : null,
+                const VerticalDivider(
+                  width: 1,
+                  thickness: 1,
+                  color: Color(0xFFF4F4F5),
                 ),
-              ),
-            ],
+                Expanded(
+                  child: _MetricGridCell(
+                    accentColor: const Color(0xFF475569),
+                    label: 'ลา / ขาด',
+                    count: leaveOrAbsentCount,
+                    onTap: onTapStatus != null
+                        ? () => onTapStatus!(AttendanceStatus.leave)
+                        : null,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -334,13 +366,13 @@ class _WhiteHeroBentoCard extends StatelessWidget {
 
 class _MetricGridCell extends StatelessWidget {
   const _MetricGridCell({
-    required this.dotColor,
+    required this.accentColor,
     required this.label,
     required this.count,
     this.onTap,
   });
 
-  final Color dotColor;
+  final Color accentColor;
   final String label;
   final int count;
   final VoidCallback? onTap;
@@ -351,53 +383,46 @@ class _MetricGridCell extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFF1F5F9)),
-          ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Expanded(
-                child: Row(
-                  children: <Widget>[
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: dotColor,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.supporting.copyWith(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF475569),
-                        ),
-                      ),
-                    ),
-                  ],
+              Container(
+                width: 3,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: accentColor,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              const SizedBox(width: 4),
-              Text(
-                '$count',
-                style: AppTypography.sectionTitle.copyWith(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF0F172A),
-                  fontFeatures: const <FontFeature>[
-                    FontFeature.tabularFigures(),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.microLabel.copyWith(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF71717A),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$count',
+                      style: AppTypography.sectionTitle.copyWith(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF09090B),
+                        fontFeatures: const <FontFeature>[
+                          FontFeature.tabularFigures(),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
