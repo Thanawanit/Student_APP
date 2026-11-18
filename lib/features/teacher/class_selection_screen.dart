@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_tokens.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../../domain/models/school_structure.dart';
 import '../../state/app_controller.dart';
 import 'teacher_shell_screen.dart';
 
-/// Screen D — Swiss Step Matrix for Stage -> Grade -> Classroom selection.
+/// Hierarchical 3-step Classroom Selection flow (`ช่วงชั้น` -> `ระดับชั้น` -> `ห้องเรียน`).
 class TeacherClassSelectionScreen extends StatefulWidget {
   const TeacherClassSelectionScreen({super.key, this.isSwitchingRoom = false});
 
@@ -71,7 +69,6 @@ class _TeacherClassSelectionScreenState
 
   @override
   Widget build(BuildContext context) {
-    final inset = ResponsiveContent.horizontalInset(context);
     final canPopDirect = _selectedStage == null && _selectedGrade == null;
     final currentStep = _selectedStage == null
         ? 1
@@ -87,127 +84,140 @@ class _TeacherClassSelectionScreenState
         }
       },
       child: Scaffold(
+        backgroundColor: const Color(0xFFF2F5F3),
         appBar: AppBar(
-          title: const Text('เลือกห้องเรียน'),
+          backgroundColor: const Color(0xFFFFFFFF),
+          elevation: 0,
+          scrolledUnderElevation: 0,
           leading: IconButton(
             tooltip: 'ย้อนกลับ',
             onPressed: _handleStepBack,
             icon: const Icon(Icons.arrow_back),
           ),
+          title: Text(
+            'เลือกห้องเรียน',
+            style: AppTypography.sectionTitle.copyWith(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF0F172A),
+            ),
+          ),
         ),
         body: SafeArea(
-          child: ListView(
-            padding: EdgeInsets.all(inset),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               ResponsiveContent(
                 padding: EdgeInsets.zero,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: _BreadcrumbStepper(
+                  currentStep: currentStep,
+                  selectedStage: _selectedStage,
+                  selectedGrade: _selectedGrade,
+                  onTapStep1: () => setState(() {
+                    _selectedStage = null;
+                    _selectedGrade = null;
+                  }),
+                  onTapStep2: () => setState(() {
+                    _selectedGrade = null;
+                  }),
+                ),
+              ),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                   children: <Widget>[
-                    // Step indicator bar
-                    Wrap(
-                      spacing: AppSpacing.space2,
-                      runSpacing: AppSpacing.space2,
-                      children: <Widget>[
-                        _StepPill(
-                          number: '01',
-                          label: 'ช่วงชั้น',
-                          active: currentStep == 1,
-                          completed: currentStep > 1,
-                        ),
-                        _StepPill(
-                          number: '02',
-                          label: 'ระดับชั้น',
-                          active: currentStep == 2,
-                          completed: currentStep > 2,
-                        ),
-                        _StepPill(
-                          number: '03',
-                          label: 'ห้องเรียน',
-                          active: currentStep == 3,
-                          completed: false,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.space5),
-
-                    SizedBox(
-                      width: double.infinity,
-                      child: Wrap(
-                        alignment: WrapAlignment.spaceBetween,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: AppSpacing.space2,
-                        runSpacing: AppSpacing.space1,
+                    ResponsiveContent(
+                      padding: EdgeInsets.zero,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          Text(
-                            _selectedStage == null
-                                ? 'เลือกช่วงชั้น'
-                                : _selectedGrade == null
-                                ? 'ระดับชั้น (${_selectedStage!.label})'
-                                : 'ห้องเรียน (มัธยมศึกษาปีที่ $_selectedGrade)',
-                            style: AppTypography.pageTitle,
-                          ),
-                          if (_selectedStage != null)
-                            TextButton(
-                              onPressed: () {
-                                setState(() {
-                                  if (_selectedGrade != null) {
-                                    _selectedGrade = null;
-                                  } else {
-                                    _selectedStage = null;
-                                  }
-                                });
-                              },
-                              child: Text(
-                                _selectedGrade != null
-                                    ? 'เปลี่ยนระดับชั้น'
-                                    : 'เปลี่ยนช่วงชั้น',
+                          if (currentStep == 1) ...<Widget>[
+                            Text(
+                              'เลือกช่วงชั้น',
+                              style: AppTypography.pageTitle.copyWith(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF0F172A),
                               ),
                             ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'เลือกระดับการศึกษาที่ต้องการตรวจสอบ',
+                              style: AppTypography.supporting.copyWith(
+                                fontSize: 13,
+                                color: const Color(0xFF64748B),
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            for (
+                              var i = 0;
+                              i < EducationStage.values.length;
+                              i++
+                            ) ...<Widget>[
+                              _StageVerticalCard(
+                                stage: EducationStage.values[i],
+                                onTap: () => setState(() {
+                                  _selectedStage = EducationStage.values[i];
+                                  _selectedGrade = null;
+                                }),
+                              ),
+                              if (i < EducationStage.values.length - 1)
+                                const SizedBox(height: 10),
+                            ],
+                          ] else if (currentStep == 2) ...<Widget>[
+                            Text(
+                              'เลือกระดับชั้น',
+                              style: AppTypography.pageTitle.copyWith(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF0F172A),
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            for (
+                              var i = 0;
+                              i < _selectedStage!.grades.length;
+                              i++
+                            ) ...<Widget>[
+                              _GradeVerticalCard(
+                                grade: _selectedStage!.grades[i],
+                                roomCount: _selectedStage!.roomsPerGrade,
+                                onTap: () => setState(
+                                  () => _selectedGrade =
+                                      _selectedStage!.grades[i],
+                                ),
+                              ),
+                              if (i < _selectedStage!.grades.length - 1)
+                                const SizedBox(height: 10),
+                            ],
+                          ] else ...<Widget>[
+                            Text(
+                              'เลือกห้องเรียน',
+                              style: AppTypography.pageTitle.copyWith(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF0F172A),
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            for (final entry in ClassroomId.roomsForGrade(
+                              _selectedStage!,
+                              _selectedGrade!,
+                            ).asMap().entries) ...<Widget>[
+                              _RoomVerticalCard(
+                                room: entry.value,
+                                isSelected:
+                                    AppScope.of(context).selectedClassroom ==
+                                    entry.value,
+                                onTap: () => _selectRoom(entry.value),
+                              ),
+                              if (entry.key < _selectedStage!.roomsPerGrade - 1)
+                                const SizedBox(height: 10),
+                            ],
+                          ],
                         ],
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.space4),
-
-                    if (_selectedStage == null)
-                      for (final stage in EducationStage.values) ...<Widget>[
-                        _StageTile(
-                          stage: stage,
-                          onTap: () => setState(() {
-                            _selectedStage = stage;
-                            _selectedGrade = null;
-                          }),
-                        ),
-                        const SizedBox(height: AppSpacing.space3),
-                      ]
-                    else if (_selectedGrade == null)
-                      _ResponsiveTileGrid(
-                        items: <Widget>[
-                          for (final grade in _selectedStage!.grades)
-                            _GradeGridTile(
-                              grade: grade,
-                              roomCount: _selectedStage!.roomsPerGrade,
-                              onTap: () =>
-                                  setState(() => _selectedGrade = grade),
-                            ),
-                        ],
-                      )
-                    else
-                      _ResponsiveTileGrid(
-                        items: <Widget>[
-                          for (final room in ClassroomId.roomsForGrade(
-                            _selectedStage!,
-                            _selectedGrade!,
-                          ))
-                            _RoomGridTile(
-                              room: room,
-                              isSelected:
-                                  AppScope.of(context).selectedClassroom ==
-                                  room,
-                              onTap: () => _selectRoom(room),
-                            ),
-                        ],
-                      ),
                   ],
                 ),
               ),
@@ -219,93 +229,216 @@ class _TeacherClassSelectionScreenState
   }
 }
 
-class _StepPill extends StatelessWidget {
-  const _StepPill({
-    required this.number,
-    required this.label,
-    required this.active,
-    required this.completed,
+class _BreadcrumbStepper extends StatelessWidget {
+  const _BreadcrumbStepper({
+    required this.currentStep,
+    required this.selectedStage,
+    required this.selectedGrade,
+    required this.onTapStep1,
+    required this.onTapStep2,
   });
 
-  final String number;
-  final String label;
-  final bool active;
-  final bool completed;
+  final int currentStep;
+  final EducationStage? selectedStage;
+  final int? selectedGrade;
+  final VoidCallback onTapStep1;
+  final VoidCallback onTapStep2;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.space3,
-        vertical: 6,
+    final String stageShort = selectedStage == EducationStage.lowerSecondary
+        ? 'ม.ต้น'
+        : 'ม.ปลาย';
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        children: <Widget>[
+          _BreadcrumbPill(
+            label: currentStep > 1 ? stageShort : '01 ช่วงชั้น',
+            isActive: currentStep == 1,
+            isCompleted: currentStep > 1,
+            onTap: currentStep > 1 ? onTapStep1 : null,
+          ),
+          Container(
+            width: 16,
+            height: 1.5,
+            margin: const EdgeInsets.symmetric(horizontal: 6),
+            color: currentStep > 1
+                ? const Color(0xFF86EFAC)
+                : const Color(0xFFE2E8E4),
+          ),
+          _BreadcrumbPill(
+            label: currentStep > 2 && selectedGrade != null
+                ? 'ม.$selectedGrade'
+                : '02 ระดับชั้น',
+            isActive: currentStep == 2,
+            isCompleted: currentStep > 2,
+            onTap: currentStep > 2 ? onTapStep2 : null,
+          ),
+          Container(
+            width: 16,
+            height: 1.5,
+            margin: const EdgeInsets.symmetric(horizontal: 6),
+            color: currentStep > 2
+                ? const Color(0xFF86EFAC)
+                : const Color(0xFFE2E8E4),
+          ),
+          _BreadcrumbPill(
+            label: '03 ห้องเรียน',
+            isActive: currentStep == 3,
+            isCompleted: false,
+          ),
+        ],
       ),
-      decoration: BoxDecoration(
-        color: active
-            ? AppColors.brandPrimary
-            : completed
-            ? AppColors.brandPrimarySoft
-            : AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.control),
-        border: Border.all(
-          color: active
-              ? AppColors.brandPrimary
-              : completed
-              ? AppColors.brandPrimary.withValues(alpha: 0.3)
-              : AppColors.borderSubtle,
-        ),
-      ),
-      child: Text(
-        '$number $label',
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        textAlign: TextAlign.center,
-        style: AppTypography.microLabel.copyWith(
-          color: active
-              ? AppColors.surface
-              : completed
-              ? AppColors.brandPrimary
-              : AppColors.textSecondary,
-          fontWeight: active || completed ? FontWeight.w600 : FontWeight.w500,
+    );
+  }
+}
+
+class _BreadcrumbPill extends StatelessWidget {
+  const _BreadcrumbPill({
+    required this.label,
+    required this.isActive,
+    required this.isCompleted,
+    this.onTap,
+  });
+
+  final String label;
+  final bool isActive;
+  final bool isCompleted;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color bgColor = isActive
+        ? const Color(0xFF14532D)
+        : isCompleted
+        ? const Color(0xFFDCFCE7)
+        : const Color(0xFFFFFFFF);
+    final Color textColor = isActive
+        ? Colors.white
+        : isCompleted
+        ? const Color(0xFF15803D)
+        : const Color(0xFF94A3B8);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(99),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(99),
+            border: !isActive && !isCompleted
+                ? Border.all(color: const Color(0xFFE2E8E4))
+                : null,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              if (isCompleted) ...<Widget>[
+                const Icon(
+                  Icons.check_rounded,
+                  size: 14,
+                  color: Color(0xFF15803D),
+                ),
+                const SizedBox(width: 4),
+              ],
+              Text(
+                label,
+                style: AppTypography.microLabel.copyWith(
+                  fontSize: 12.5,
+                  color: textColor,
+                  fontWeight: isActive
+                      ? FontWeight.w700
+                      : isCompleted
+                      ? FontWeight.w600
+                      : FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _StageTile extends StatelessWidget {
-  const _StageTile({required this.stage, required this.onTap});
+class _StageVerticalCard extends StatelessWidget {
+  const _StageVerticalCard({required this.stage, required this.onTap});
 
   final EducationStage stage;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final isLower = stage == EducationStage.lowerSecondary;
+    final badgeText = isLower ? 'ม.ต้น' : 'ม.ปลาย';
+    final subtitleText = isLower
+        ? 'ม.1 – ม.3 • ระดับชั้นละ 6 ห้อง (รวม 18 ห้อง)'
+        : 'ม.4 – ม.6 • ระดับชั้นละ 7 ห้อง (รวม 21 ห้อง)';
+
     return Material(
-      color: AppColors.surface,
-      borderRadius: BorderRadius.circular(AppRadius.panel),
+      color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.panel),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(AppSpacing.space5),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.panel),
-            border: Border.all(color: AppColors.borderSubtle),
+            color: const Color(0xFFFFFFFF),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE2E8E4)),
           ),
           child: Row(
             children: <Widget>[
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFECFDF5),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    badgeText,
+                    style: AppTypography.microLabel.copyWith(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF15803D),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text(stage.label, style: AppTypography.sectionTitle),
-                    const SizedBox(height: 2),
-                    Text(stage.subtitle, style: AppTypography.supporting),
+                    Text(
+                      stage.label,
+                      style: AppTypography.sectionTitle.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitleText,
+                      style: AppTypography.supporting.copyWith(
+                        fontSize: 12.5,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+              const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8)),
             ],
           ),
         ),
@@ -314,39 +447,8 @@ class _StageTile extends StatelessWidget {
   }
 }
 
-class _ResponsiveTileGrid extends StatelessWidget {
-  const _ResponsiveTileGrid({required this.items});
-
-  final List<Widget> items;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final effectiveWidth =
-            constraints.maxWidth / MediaQuery.textScalerOf(context).scale(1);
-        final cols = constraints.maxWidth >= 600
-            ? 3
-            : effectiveWidth >= 280
-            ? 2
-            : 1;
-        const gap = AppSpacing.space3;
-        final itemWidth = (constraints.maxWidth - (gap * (cols - 1))) / cols;
-
-        return Wrap(
-          spacing: gap,
-          runSpacing: gap,
-          children: <Widget>[
-            for (final item in items) SizedBox(width: itemWidth, child: item),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _GradeGridTile extends StatelessWidget {
-  const _GradeGridTile({
+class _GradeVerticalCard extends StatelessWidget {
+  const _GradeVerticalCard({
     required this.grade,
     required this.roomCount,
     required this.onTap,
@@ -359,29 +461,65 @@ class _GradeGridTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surface,
-      borderRadius: BorderRadius.circular(AppRadius.panel),
+      color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.panel),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.all(AppSpacing.space4),
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.panel),
-            border: Border.all(color: AppColors.borderSubtle),
+            color: const Color(0xFFFFFFFF),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE2E8E4)),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: <Widget>[
-              Text(
-                'มัธยมศึกษาปีที่ $grade (ม.$grade)',
-                style: AppTypography.bodyStrong,
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    'ม.$grade',
+                    style: AppTypography.sectionTitle.copyWith(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF14532D),
+                    ),
+                  ),
+                ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                '$roomCount ห้อง ($grade/1–$grade/$roomCount)',
-                style: AppTypography.microLabel,
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'มัธยมศึกษาปีที่ $grade',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.sectionTitle.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$roomCount ห้องเรียน (ห้อง $grade/1 – $grade/$roomCount)',
+                      style: AppTypography.supporting.copyWith(
+                        fontSize: 12.5,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8)),
             ],
           ),
         ),
@@ -390,8 +528,8 @@ class _GradeGridTile extends StatelessWidget {
   }
 }
 
-class _RoomGridTile extends StatelessWidget {
-  const _RoomGridTile({
+class _RoomVerticalCard extends StatelessWidget {
+  const _RoomVerticalCard({
     required this.room,
     required this.isSelected,
     required this.onTap,
@@ -404,43 +542,88 @@ class _RoomGridTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: isSelected ? AppColors.brandPrimarySoft : AppColors.surface,
-      borderRadius: BorderRadius.circular(AppRadius.panel),
+      color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.panel),
+        borderRadius: BorderRadius.circular(14),
         child: Container(
-          padding: const EdgeInsets.all(AppSpacing.space4),
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.panel),
+            color: isSelected
+                ? const Color(0xFFECFDF5)
+                : const Color(0xFFFFFFFF),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: isSelected
-                  ? AppColors.brandPrimary
-                  : AppColors.borderSubtle,
-              width: isSelected ? 1.5 : AppBorders.width,
+                  ? const Color(0xFF16A34A)
+                  : const Color(0xFFE2E8E4),
+              width: isSelected ? 1.5 : 1,
             ),
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Expanded(
-                child: Text(
-                  room.roomLabel,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.sectionTitle.copyWith(
-                    color: isSelected
-                        ? AppColors.brandPrimary
-                        : AppColors.textPrimary,
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? const Color(0xFF16A34A)
+                      : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Center(
+                  child: Text(
+                    room.code,
+                    style: AppTypography.bodyStrong.copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: isSelected
+                          ? Colors.white
+                          : const Color(0xFF334155),
+                      fontFeatures: const <FontFeature>[
+                        FontFeature.tabularFigures(),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(width: AppSpacing.space2),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      room.roomLabel,
+                      style: AppTypography.sectionTitle.copyWith(
+                        fontSize: 15.5,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isSelected
+                          ? 'นักเรียน 12 คน • กำลังแสดงผล'
+                          : 'นักเรียน 12 คน',
+                      style: AppTypography.microLabel.copyWith(
+                        fontSize: 12,
+                        color: isSelected
+                            ? const Color(0xFF15803D)
+                            : const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               Icon(
-                isSelected ? Icons.check_circle : Icons.chevron_right,
-                size: 18,
+                isSelected
+                    ? Icons.check_circle_rounded
+                    : Icons.chevron_right_rounded,
+                size: isSelected ? 22 : 24,
                 color: isSelected
-                    ? AppColors.brandPrimary
-                    : AppColors.textSecondary,
+                    ? const Color(0xFF16A34A)
+                    : const Color(0xFF94A3B8),
               ),
             ],
           ),

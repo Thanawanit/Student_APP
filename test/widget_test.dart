@@ -48,9 +48,9 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('มัธยมศึกษาตอนปลาย'));
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('มัธยมศึกษาปีที่ 5 (ม.5)'));
+      await tester.ensureVisible(find.text('มัธยมศึกษาปีที่ 5'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('มัธยมศึกษาปีที่ 5 (ม.5)'));
+      await tester.tap(find.text('มัธยมศึกษาปีที่ 5'));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('ห้อง 5/2'));
       await tester.pumpAndSettle();
@@ -227,9 +227,9 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('มัธยมศึกษาตอนปลาย'));
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('มัธยมศึกษาปีที่ 5 (ม.5)'));
+      await tester.ensureVisible(find.text('มัธยมศึกษาปีที่ 5'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('มัธยมศึกษาปีที่ 5 (ม.5)'));
+      await tester.tap(find.text('มัธยมศึกษาปีที่ 5'));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('ห้อง 5/2'));
       await tester.pumpAndSettle();
