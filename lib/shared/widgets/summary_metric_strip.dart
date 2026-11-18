@@ -139,74 +139,145 @@ class _WhiteHeroBentoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final segments = <(int, Color)>[
-      (presentCount, const Color(0xFF059669)),
-      (lateCount, const Color(0xFFD97706)),
-      (leaveOrAbsentCount, const Color(0xFF475569)),
-      (pendingCount, const Color(0xFFE4E4E7)),
-    ].where((s) => s.$1 > 0).toList();
+    final List<({Color fill, Color? border})> capsules =
+        <({Color fill, Color? border})>[
+          for (var i = 0; i < presentCount; i++)
+            (fill: const Color(0xFF10B981), border: null),
+          for (var i = 0; i < lateCount; i++)
+            (fill: const Color(0xFFF59E0B), border: null),
+          for (var i = 0; i < leaveOrAbsentCount; i++)
+            (fill: const Color(0xFF3B82F6), border: null),
+          for (var i = 0; i < pendingCount; i++)
+            (fill: const Color(0xFFF4F4F5), border: const Color(0xFFD4D4D8)),
+        ];
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: const Color(0xFFFFFFFF),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFE4E4E7), width: 1),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          // 1. Editorial / Fintech Top Metric Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      'สแกนเข้าเรียนแล้ว',
-                      style: AppTypography.microLabel.copyWith(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF71717A),
-                      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: <Widget>[
+            Positioned(
+              top: -40,
+              right: -40,
+              child: IgnorePointer(
+                child: Container(
+                  width: 160,
+                  height: 160,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: <Color>[
+                        const Color(0xFF10B981).withValues(alpha: 0.10),
+                        Colors.transparent,
+                      ],
                     ),
-                    const SizedBox(height: 6),
-                    Semantics(
-                      label:
-                          'สแกนเข้าเรียนแล้ว $checkedIn จาก $total คน คิดเป็นร้อยละ $ratePercent',
-                      child: Text.rich(
-                        TextSpan(
-                          children: <InlineSpan>[
-                            TextSpan(
-                              text: '$checkedIn',
-                              style: AppTypography.display.copyWith(
-                                fontSize: 38,
-                                fontWeight: FontWeight.w800,
-                                color: const Color(0xFF09090B),
-                                letterSpacing: -1.2,
-                                height: 1.0,
-                                fontFeatures: const <FontFeature>[
-                                  FontFeature.tabularFigures(),
-                                ],
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  // 1. Top Header & Hero Number Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              'สแกนเข้าเรียนแล้ว',
+                              style: AppTypography.microLabel.copyWith(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF71717A),
                               ),
                             ),
-                            TextSpan(
-                              text: ' / $total คน',
+                            const SizedBox(height: 4),
+                            Semantics(
+                              label:
+                                  'สแกนเข้าเรียนแล้ว $checkedIn จาก $total คน คิดเป็นร้อยละ $ratePercent',
+                              child: Text.rich(
+                                TextSpan(
+                                  children: <InlineSpan>[
+                                    TextSpan(
+                                      text: '$checkedIn',
+                                      style: AppTypography.display.copyWith(
+                                        fontSize: 40,
+                                        fontWeight: FontWeight.w800,
+                                        color: const Color(0xFF09090B),
+                                        letterSpacing: -1.5,
+                                        height: 1.0,
+                                        fontFeatures: const <FontFeature>[
+                                          FontFeature.tabularFigures(),
+                                        ],
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: ' / $total คน',
+                                      style: AppTypography.sectionTitle
+                                          .copyWith(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w500,
+                                            color: const Color(0xFF71717A),
+                                            fontFeatures: const <FontFeature>[
+                                              FontFeature.tabularFigures(),
+                                            ],
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.space3),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFECFDF5),
+                          border: Border.all(
+                            color: const Color(0xFFA7F3D0),
+                            width: 1,
+                          ),
+                          borderRadius: BorderRadius.circular(99),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            const Icon(
+                              Icons.trending_up_rounded,
+                              size: 15,
+                              color: Color(0xFF059669),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '$ratePercent%',
                               style: AppTypography.sectionTitle.copyWith(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                                color: const Color(0xFF71717A),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF065F46),
                                 fontFeatures: const <FontFeature>[
                                   FontFeature.tabularFigures(),
                                 ],
@@ -215,164 +286,147 @@ class _WhiteHeroBentoCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'ตัดรอบเวลา 09:00\u00A0น.',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.microLabel.copyWith(
-                        fontSize: 12,
-                        color: const Color(0xFFA1A1AA),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.space3),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFAFAFA),
-                  border: Border.all(color: const Color(0xFFE4E4E7), width: 1),
-                  borderRadius: BorderRadius.circular(99),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Container(
-                      width: 7,
-                      height: 7,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF059669),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '$ratePercent%',
-                      style: AppTypography.sectionTitle.copyWith(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF09090B),
-                        fontFeatures: const <FontFeature>[
-                          FontFeature.tabularFigures(),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
 
-          // 2. Razor-Thin Sophisticated Segmented Bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: SizedBox(
-              height: 5,
-              child: segments.isEmpty
-                  ? Container(color: const Color(0xFFE4E4E7))
-                  : Row(
+                  // 2. Visual Student Capsule Matrix
+                  if (capsules.isNotEmpty)
+                    Row(
                       children: <Widget>[
-                        for (var i = 0; i < segments.length; i++) ...<Widget>[
+                        for (var i = 0; i < capsules.length; i++) ...<Widget>[
                           Expanded(
-                            flex: segments[i].$1,
-                            child: Container(color: segments[i].$2),
+                            child: Container(
+                              height: 22,
+                              decoration: BoxDecoration(
+                                color: capsules[i].fill,
+                                borderRadius: BorderRadius.circular(6),
+                                border: capsules[i].border != null
+                                    ? Border.all(
+                                        color: capsules[i].border!,
+                                        width: 1,
+                                      )
+                                    : null,
+                              ),
+                            ),
                           ),
-                          if (i < segments.length - 1)
-                            Container(width: 2, color: Colors.white),
+                          if (i < capsules.length - 1) const SizedBox(width: 5),
                         ],
                       ],
                     ),
-            ),
-          ),
-          const SizedBox(height: 18),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Flexible(
+                        child: Text(
+                          '1 ช่อง = นักเรียน 1 คน',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.microLabel.copyWith(
+                            fontSize: 10.5,
+                            color: const Color(0xFFA1A1AA),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'ตัดรอบ 09:00\u00A0น.',
+                        style: AppTypography.microLabel.copyWith(
+                          fontSize: 10.5,
+                          color: const Color(0xFFA1A1AA),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
 
-          // 3. Stripe/Vercel-Style Hairline Metric Grid
-          const Divider(height: 1, thickness: 1, color: Color(0xFFF4F4F5)),
-          IntrinsicHeight(
-            child: Row(
-              children: <Widget>[
-                Expanded(
-                  child: _MetricGridCell(
-                    accentColor: const Color(0xFF059669),
-                    label: 'มาเรียน',
-                    count: presentCount,
-                    onTap: onTapStatus != null
-                        ? () => onTapStatus!(AttendanceStatus.present)
-                        : null,
+                  // 3. Clean 4-Column Horizontal Stat Strip
+                  const Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: Color(0xFFF4F4F5),
                   ),
-                ),
-                const VerticalDivider(
-                  width: 1,
-                  thickness: 1,
-                  color: Color(0xFFF4F4F5),
-                ),
-                Expanded(
-                  child: _MetricGridCell(
-                    accentColor: const Color(0xFFD97706),
-                    label: 'มาสาย',
-                    count: lateCount,
-                    onTap: onTapStatus != null
-                        ? () => onTapStatus!(AttendanceStatus.late)
-                        : null,
+                  const SizedBox(height: 12),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      Expanded(
+                        child: _StatStripColumn(
+                          dotColor: const Color(0xFF10B981),
+                          label: 'มาเรียน',
+                          count: presentCount,
+                          onTap: onTapStatus != null
+                              ? () => onTapStatus!(AttendanceStatus.present)
+                              : null,
+                        ),
+                      ),
+                      Container(
+                        width: 1,
+                        height: 28,
+                        color: const Color(0xFFF4F4F5),
+                      ),
+                      Expanded(
+                        child: _StatStripColumn(
+                          dotColor: const Color(0xFFF59E0B),
+                          label: 'มาสาย',
+                          count: lateCount,
+                          onTap: onTapStatus != null
+                              ? () => onTapStatus!(AttendanceStatus.late)
+                              : null,
+                        ),
+                      ),
+                      Container(
+                        width: 1,
+                        height: 28,
+                        color: const Color(0xFFF4F4F5),
+                      ),
+                      Expanded(
+                        child: _StatStripColumn(
+                          dotColor: const Color(0xFFA1A1AA),
+                          label: 'รอยืนยัน',
+                          count: pendingCount,
+                          onTap: onTapStatus != null
+                              ? () => onTapStatus!(AttendanceStatus.pending)
+                              : null,
+                        ),
+                      ),
+                      Container(
+                        width: 1,
+                        height: 28,
+                        color: const Color(0xFFF4F4F5),
+                      ),
+                      Expanded(
+                        child: _StatStripColumn(
+                          dotColor: const Color(0xFF3B82F6),
+                          label: 'ลา/ขาด',
+                          count: leaveOrAbsentCount,
+                          onTap: onTapStatus != null
+                              ? () => onTapStatus!(AttendanceStatus.leave)
+                              : null,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const Divider(height: 1, thickness: 1, color: Color(0xFFF4F4F5)),
-          IntrinsicHeight(
-            child: Row(
-              children: <Widget>[
-                Expanded(
-                  child: _MetricGridCell(
-                    accentColor: const Color(0xFFA1A1AA),
-                    label: 'รอยืนยัน',
-                    count: pendingCount,
-                    onTap: onTapStatus != null
-                        ? () => onTapStatus!(AttendanceStatus.pending)
-                        : null,
-                  ),
-                ),
-                const VerticalDivider(
-                  width: 1,
-                  thickness: 1,
-                  color: Color(0xFFF4F4F5),
-                ),
-                Expanded(
-                  child: _MetricGridCell(
-                    accentColor: const Color(0xFF475569),
-                    label: 'ลา / ขาด',
-                    count: leaveOrAbsentCount,
-                    onTap: onTapStatus != null
-                        ? () => onTapStatus!(AttendanceStatus.leave)
-                        : null,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-class _MetricGridCell extends StatelessWidget {
-  const _MetricGridCell({
-    required this.accentColor,
+class _StatStripColumn extends StatelessWidget {
+  const _StatStripColumn({
+    required this.dotColor,
     required this.label,
     required this.count,
     this.onTap,
   });
 
-  final Color accentColor;
+  final Color dotColor;
   final String label;
   final int count;
   final VoidCallback? onTap;
@@ -383,46 +437,48 @@ class _MetricGridCell extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-          child: Row(
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Container(
-                width: 3,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: accentColor,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Text(
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: dotColor,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  Flexible(
+                    child: Text(
                       label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.microLabel.copyWith(
-                        fontSize: 12,
+                        fontSize: 11.5,
                         fontWeight: FontWeight.w500,
                         color: const Color(0xFF71717A),
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '$count',
-                      style: AppTypography.sectionTitle.copyWith(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF09090B),
-                        fontFeatures: const <FontFeature>[
-                          FontFeature.tabularFigures(),
-                        ],
-                      ),
-                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '$count',
+                style: AppTypography.sectionTitle.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF09090B),
+                  fontFeatures: const <FontFeature>[
+                    FontFeature.tabularFigures(),
                   ],
                 ),
               ),
