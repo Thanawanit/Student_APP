@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -10,9 +8,9 @@ import '../../domain/models/attendance_models.dart';
 import '../../domain/models/attendance_status.dart';
 
 /// Teacher Overview content (`ภาพรวม`):
-/// 1) Prominent Branded Hero Summary Card with decorative vector background (`CustomPaint`),
-///    `84x84` multi-segment donut chart, and always-visible 2x2 Bento status grid
-/// 2) Balanced Follow-up Section (`ต้องติดตามวันนี้`) with selectable Filter Chips
+/// 1) Clean White Hero Bento Card with crisp percentage badge, iOS-style segmented
+///    horizontal bar, and high-contrast 2x2 light-surface metric grid
+/// 2) Follow-up Section (`ต้องติดตามวันนี้`) with selectable Filter Chips
 ///    and full-name Student Cards with 2-letter Thai initials.
 class ClassroomIntelligencePanel extends StatelessWidget {
   const ClassroomIntelligencePanel({
@@ -63,7 +61,7 @@ class ClassroomIntelligencePanel extends StatelessWidget {
             return bt.compareTo(at);
           });
 
-    final heroCard = _ProminentBrandedHeroCard(
+    final heroCard = _WhiteHeroBentoCard(
       checkedIn: checkedIn,
       total: total,
       ratePercent: ratePercent,
@@ -117,8 +115,8 @@ class ClassroomIntelligencePanel extends StatelessWidget {
   }
 }
 
-class _ProminentBrandedHeroCard extends StatelessWidget {
-  const _ProminentBrandedHeroCard({
+class _WhiteHeroBentoCard extends StatelessWidget {
+  const _WhiteHeroBentoCard({
     required this.checkedIn,
     required this.total,
     required this.ratePercent,
@@ -140,370 +138,208 @@ class _ProminentBrandedHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final segments = <(int, Color)>[
+      (presentCount, const Color(0xFF16A34A)),
+      (lateCount, const Color(0xFFF59E0B)),
+      (leaveOrAbsentCount, const Color(0xFF3B82F6)),
+      (pendingCount, const Color(0xFFE2E8F0)),
+    ].where((s) => s.$1 > 0).toList();
+
     return Container(
       width: double.infinity,
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: <Color>[Color(0xFF14532D), Color(0xFF15803D)],
-        ),
-        borderRadius: BorderRadius.circular(24),
+        color: const Color(0xFFFFFFFF),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8E4), width: 1),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: const Color(0xFF14532D).withValues(alpha: 0.22),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Stack(
-          children: <Widget>[
-            // Decorative Vector Background (CustomPaint)
-            const Positioned.fill(
-              child: CustomPaint(painter: _HeroVectorBackgroundPainter()),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  // Top Hero Row: Main Metric + 84x84 Multi-Segment Donut Chart
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.16),
-                                borderRadius: BorderRadius.circular(99),
-                              ),
-                              child: Text(
-                                'สรุปการเข้าเรียนวันนี้',
-                                style: AppTypography.microLabel.copyWith(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFFDCFCE7),
-                                ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          // 1. Top Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'สแกนเข้าเรียนแล้ว',
+                      style: AppTypography.supporting.copyWith(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Semantics(
+                      label:
+                          'สแกนเข้าเรียนแล้ว $checkedIn จาก $total คน คิดเป็นร้อยละ $ratePercent',
+                      child: Text.rich(
+                        TextSpan(
+                          children: <InlineSpan>[
+                            TextSpan(
+                              text: '$checkedIn',
+                              style: AppTypography.display.copyWith(
+                                fontSize: 40,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF0F172A),
+                                height: 1.05,
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Semantics(
-                              label:
-                                  'สแกนเข้าเรียนแล้ว $checkedIn จาก $total คน คิดเป็นร้อยละ $ratePercent',
-                              child: Text.rich(
-                                TextSpan(
-                                  children: <InlineSpan>[
-                                    TextSpan(
-                                      text: '$checkedIn',
-                                      style: AppTypography.display.copyWith(
-                                        fontSize: 42,
-                                        fontWeight: FontWeight.w800,
-                                        color: Colors.white,
-                                        height: 1.0,
-                                      ),
-                                    ),
-                                    TextSpan(
-                                      text: ' / $total คน',
-                                      style: AppTypography.sectionTitle
-                                          .copyWith(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w500,
-                                            color: const Color(0xFFBBF7D0),
-                                            fontFeatures: const <FontFeature>[
-                                              FontFeature.tabularFigures(),
-                                            ],
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'สแกนเข้าเรียนแล้ว • ตัดรอบ 09:00\u00A0น.',
-                              style: AppTypography.microLabel.copyWith(
-                                fontSize: 12,
-                                color: const Color(0xFFA7F3D0),
+                            TextSpan(
+                              text: ' / $total คน',
+                              style: AppTypography.sectionTitle.copyWith(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xFF64748B),
+                                fontFeatures: const <FontFeature>[
+                                  FontFeature.tabularFigures(),
+                                ],
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.space3),
-
-                      // 84x84 Custom Multi-Segment Donut Chart
-                      SizedBox(
-                        width: 84,
-                        height: 84,
-                        child: CustomPaint(
-                          painter: _MultiSegmentDonutPainter(
-                            presentCount: presentCount,
-                            lateCount: lateCount,
-                            leaveOrAbsentCount: leaveOrAbsentCount,
-                            pendingCount: pendingCount,
-                          ),
-                          child: Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(14),
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: <Widget>[
-                                    Text(
-                                      '$ratePercent%',
-                                      style: AppTypography.sectionTitle
-                                          .copyWith(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w800,
-                                            color: Colors.white,
-                                            height: 1.05,
-                                            fontFeatures: const <FontFeature>[
-                                              FontFeature.tabularFigures(),
-                                            ],
-                                          ),
-                                    ),
-                                    Text(
-                                      'เข้าเรียน',
-                                      style: AppTypography.microLabel.copyWith(
-                                        fontSize: 10,
-                                        color: const Color(0xFFBBF7D0),
-                                        height: 1.1,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'ตัดรอบเวลา 09:00\u00A0น.',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.microLabel.copyWith(
+                        fontSize: 12,
+                        color: const Color(0xFF94A3B8),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-
-                  // Always-Visible 2x2 Bento Status Grid
-                  Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: _HeroStatusBentoTile(
-                          icon: Icons.check_circle_rounded,
-                          iconColor: const Color(0xFF4ADE80),
-                          iconBadgeBg: const Color(
-                            0xFF4ADE80,
-                          ).withValues(alpha: 0.22),
-                          label: 'มาเรียน',
-                          count: presentCount,
-                          onTap: onTapStatus != null
-                              ? () => onTapStatus!(AttendanceStatus.present)
-                              : null,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _HeroStatusBentoTile(
-                          icon: Icons.access_time_filled_rounded,
-                          iconColor: const Color(0xFFFBBF24),
-                          iconBadgeBg: const Color(
-                            0xFFFBBF24,
-                          ).withValues(alpha: 0.22),
-                          label: 'มาสาย',
-                          count: lateCount,
-                          onTap: onTapStatus != null
-                              ? () => onTapStatus!(AttendanceStatus.late)
-                              : null,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: _HeroStatusBentoTile(
-                          icon: Icons.hourglass_top_rounded,
-                          iconColor: Colors.white,
-                          iconBadgeBg: Colors.white.withValues(alpha: 0.18),
-                          label: 'รอยืนยัน',
-                          count: pendingCount,
-                          onTap: onTapStatus != null
-                              ? () => onTapStatus!(AttendanceStatus.pending)
-                              : null,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _HeroStatusBentoTile(
-                          icon: Icons.event_busy_rounded,
-                          iconColor: const Color(0xFF93C5FD),
-                          iconBadgeBg: const Color(
-                            0xFF60A5FA,
-                          ).withValues(alpha: 0.22),
-                          label: 'ลา / ขาด',
-                          count: leaveOrAbsentCount,
-                          onTap: onTapStatus != null
-                              ? () => onTapStatus!(AttendanceStatus.leave)
-                              : null,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: AppSpacing.space3),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDCFCE7),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '$ratePercent%',
+                  style: AppTypography.sectionTitle.copyWith(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF15803D),
+                    fontFeatures: const <FontFeature>[
+                      FontFeature.tabularFigures(),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // 2. iOS-Style Segmented Horizontal Bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(99),
+            child: SizedBox(
+              height: 10,
+              child: segments.isEmpty
+                  ? Container(color: const Color(0xFFE2E8F0))
+                  : Row(
+                      children: <Widget>[
+                        for (var i = 0; i < segments.length; i++) ...<Widget>[
+                          Expanded(
+                            flex: segments[i].$1,
+                            child: Container(color: segments[i].$2),
+                          ),
+                          if (i < segments.length - 1)
+                            Container(width: 2, color: Colors.white),
+                        ],
+                      ],
+                    ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 16),
+
+          // 3. Crisp 2x2 Metric Grid
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: _MetricGridCell(
+                  dotColor: const Color(0xFF16A34A),
+                  label: 'มาเรียน',
+                  count: presentCount,
+                  onTap: onTapStatus != null
+                      ? () => onTapStatus!(AttendanceStatus.present)
+                      : null,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _MetricGridCell(
+                  dotColor: const Color(0xFFF59E0B),
+                  label: 'มาสาย',
+                  count: lateCount,
+                  onTap: onTapStatus != null
+                      ? () => onTapStatus!(AttendanceStatus.late)
+                      : null,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: _MetricGridCell(
+                  dotColor: const Color(0xFF94A3B8),
+                  label: 'รอยืนยัน',
+                  count: pendingCount,
+                  onTap: onTapStatus != null
+                      ? () => onTapStatus!(AttendanceStatus.pending)
+                      : null,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _MetricGridCell(
+                  dotColor: const Color(0xFF3B82F6),
+                  label: 'ลา / ขาด',
+                  count: leaveOrAbsentCount,
+                  onTap: onTapStatus != null
+                      ? () => onTapStatus!(AttendanceStatus.leave)
+                      : null,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
 
-class _HeroVectorBackgroundPainter extends CustomPainter {
-  const _HeroVectorBackgroundPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final circlePaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.06)
-      ..style = PaintingStyle.fill;
-
-    // Soft translucent circles at top-right and bottom-left
-    canvas.drawCircle(
-      Offset(size.width * 0.9, size.height * 0.12),
-      78,
-      circlePaint,
-    );
-    canvas.drawCircle(
-      Offset(size.width * 0.08, size.height * 0.88),
-      64,
-      circlePaint,
-    );
-
-    // Subtle smooth wave/sparkline path
-    final wavePaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.08)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
-      ..strokeCap = StrokeCap.round;
-
-    final path = Path()
-      ..moveTo(0, size.height * 0.56)
-      ..cubicTo(
-        size.width * 0.28,
-        size.height * 0.42,
-        size.width * 0.52,
-        size.height * 0.68,
-        size.width * 0.78,
-        size.height * 0.48,
-      )
-      ..quadraticBezierTo(
-        size.width * 0.9,
-        size.height * 0.39,
-        size.width,
-        size.height * 0.44,
-      );
-
-    canvas.drawPath(path, wavePaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _HeroVectorBackgroundPainter oldDelegate) =>
-      false;
-}
-
-class _MultiSegmentDonutPainter extends CustomPainter {
-  const _MultiSegmentDonutPainter({
-    required this.presentCount,
-    required this.lateCount,
-    required this.leaveOrAbsentCount,
-    required this.pendingCount,
-  });
-
-  final int presentCount;
-  final int lateCount;
-  final int leaveOrAbsentCount;
-  final int pendingCount;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    const strokeWidth = 9.0;
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = (math.min(size.width, size.height) - strokeWidth) / 2;
-    final rect = Rect.fromCircle(center: center, radius: radius);
-
-    final total = presentCount + lateCount + leaveOrAbsentCount + pendingCount;
-    if (total <= 0) {
-      final trackPaint = Paint()
-        ..color = Colors.white.withValues(alpha: 0.22)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth;
-      canvas.drawCircle(center, radius, trackPaint);
-      return;
-    }
-
-    final segments = <(int, Color)>[
-      (presentCount, const Color(0xFF4ADE80)),
-      (lateCount, const Color(0xFFFBBF24)),
-      (leaveOrAbsentCount, const Color(0xFF60A5FA)),
-      (pendingCount, Colors.white.withValues(alpha: 0.22)),
-    ].where((s) => s.$1 > 0).toList();
-
-    final gapRadians = segments.length > 1 ? 0.16 : 0.0;
-    final availableRadians = (2 * math.pi) - (gapRadians * segments.length);
-    var startAngle = -math.pi / 2;
-
-    for (final segment in segments) {
-      final sweepAngle = (segment.$1 / total) * availableRadians;
-      final paint = Paint()
-        ..color = segment.$2
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round;
-
-      canvas.drawArc(
-        rect,
-        startAngle + (gapRadians / 2),
-        math.max(0.04, sweepAngle),
-        false,
-        paint,
-      );
-      startAngle += sweepAngle + gapRadians;
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _MultiSegmentDonutPainter oldDelegate) {
-    return oldDelegate.presentCount != presentCount ||
-        oldDelegate.lateCount != lateCount ||
-        oldDelegate.leaveOrAbsentCount != leaveOrAbsentCount ||
-        oldDelegate.pendingCount != pendingCount;
-  }
-}
-
-class _HeroStatusBentoTile extends StatelessWidget {
-  const _HeroStatusBentoTile({
-    required this.icon,
-    required this.iconColor,
-    required this.iconBadgeBg,
+class _MetricGridCell extends StatelessWidget {
+  const _MetricGridCell({
+    required this.dotColor,
     required this.label,
     required this.count,
     this.onTap,
   });
 
-  final IconData icon;
-  final Color iconColor;
-  final Color iconBadgeBg;
+  final Color dotColor;
   final String label;
   final int count;
   final VoidCallback? onTap;
@@ -514,45 +350,51 @@ class _HeroStatusBentoTile extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.11),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+            color: const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFF1F5F9)),
           ),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: iconBadgeBg,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: iconColor, size: 16),
-              ),
-              const SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.microLabel.copyWith(
-                    fontSize: 12,
-                    color: const Color(0xFFDCFCE7),
-                    fontWeight: FontWeight.w500,
-                  ),
+                child: Row(
+                  children: <Widget>[
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: dotColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.supporting.copyWith(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF475569),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(width: 4),
               Text(
                 '$count',
                 style: AppTypography.sectionTitle.copyWith(
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.w800,
-                  color: Colors.white,
+                  color: const Color(0xFF0F172A),
                   fontFeatures: const <FontFeature>[
                     FontFeature.tabularFigures(),
                   ],
