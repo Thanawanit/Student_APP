@@ -122,13 +122,12 @@ void main() {
       expect(find.text('สัปดาห์ 16–20 พ.ย. 2569'), findsOneWidget);
       expect(find.text('รอสแกนเข้าเรียน'), findsOneWidget);
       expect(find.text('รอยืนยัน'), findsWidgets);
-      expect(find.text('ดูประวัติการเข้าเรียนย้อนหลัง'), findsOneWidget);
+      expect(find.text('ไทม์ไลน์วันนี้'), findsOneWidget);
+      expect(find.text('แจ้งลาเรียนล่วงหน้า'), findsOneWidget);
       expect(find.text('แก้ไขสถานะ'), findsNothing);
 
-      // Navigate to dedicated Parent History screen and filter by October
-      await tester.ensureVisible(find.text('ดูประวัติการเข้าเรียนย้อนหลัง'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('ดูประวัติการเข้าเรียนย้อนหลัง'));
+      // Navigate to dedicated Parent History screen via bottom navigation bar and filter by October
+      await tester.tap(find.text('ประวัติ').first);
       await tester.pumpAndSettle();
 
       await tester.ensureVisible(find.text('ต.ค. 2569').first);
@@ -167,7 +166,8 @@ void main() {
 
       expect(find.text('โหมดผู้ปกครอง'), findsOneWidget);
       expect(find.text('ธนกฤต รัตนโชติ'), findsWidgets);
-      expect(find.text('ดูประวัติการเข้าเรียนย้อนหลัง'), findsOneWidget);
+      expect(find.text('ถึงโรงเรียนเรียบร้อยแล้ว'), findsOneWidget);
+      expect(find.text('ไทม์ไลน์วันนี้'), findsOneWidget);
     },
   );
 
@@ -261,9 +261,14 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('ธนกฤต รัตนโชติ'), findsOneWidget);
-      expect(find.text('มาเรียน · ตรงเวลา'), findsOneWidget);
+      expect(find.text('ธร'), findsOneWidget);
+      expect(find.text('16 พ.ย. 69'), findsOneWidget);
+      expect(find.text('ตรงเวลา'), findsOneWidget);
+      expect(find.text('ถึงโรงเรียนเรียบร้อยแล้ว'), findsOneWidget);
       expect(find.text('การเข้าเรียนสัปดาห์นี้'), findsOneWidget);
-      expect(find.text('ดูประวัติการเข้าเรียนย้อนหลัง'), findsOneWidget);
+      expect(find.text('เข้าเรียนสัปดาห์นี้ 1/1 วัน'), findsOneWidget);
+      expect(find.text('ไทม์ไลน์วันนี้'), findsOneWidget);
+      expect(find.text('แจ้งลาเรียนล่วงหน้า'), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
