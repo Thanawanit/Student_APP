@@ -132,11 +132,11 @@ void main() {
       await tester.tap(find.text('ประวัติ').first);
       await tester.pumpAndSettle();
 
-      await tester.ensureVisible(find.text('ต.ค. 2569').first);
+      await tester.ensureVisible(find.text('ต.ค. 69').first);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('ต.ค. 2569').first);
+      await tester.tap(find.text('ต.ค. 69').first);
       await tester.pumpAndSettle();
-      expect(find.textContaining('ตุลาคม 2569'), findsWidgets);
+      expect(find.text('ต.ค.'), findsWidgets);
 
       // Open Parent Notifications screen via navigation rail/bar
       await tester.tap(find.text('แจ้งเตือน').first);

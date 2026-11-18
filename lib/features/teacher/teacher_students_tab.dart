@@ -9,7 +9,7 @@ import '../../domain/models/attendance_models.dart';
 import '../../domain/models/attendance_status.dart';
 import '../../shared/widgets/filter_chip_bar.dart';
 import '../../shared/widgets/state_views.dart';
-import '../../shared/widgets/student_attendance_row.dart';
+import '../../shared/widgets/status_chip.dart';
 import '../../state/app_controller.dart';
 import '../shared/student_detail_screen.dart';
 import 'class_selection_screen.dart';
@@ -66,24 +66,59 @@ class _TeacherStudentsTabState extends State<TeacherStudentsTab> {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         titleSpacing: inset,
         title: const Text('รายชื่อนักเรียน'),
         actions: <Widget>[
           if (classroom != null)
-            TextButton.icon(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const TeacherClassSelectionScreen(
-                      isSwitchingRoom: true,
+            Padding(
+              padding: EdgeInsets.only(right: inset),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const TeacherClassSelectionScreen(
+                          isSwitchingRoom: true,
+                        ),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(99),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(99),
+                      border: Border.all(color: const Color(0xFFE2E8E4)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        const Icon(
+                          Icons.swap_horiz,
+                          size: 16,
+                          color: Color(0xFF14532D),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'ห้อง ${classroom.code}',
+                          style: AppTypography.microLabel.copyWith(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF14532D),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                );
-              },
-              icon: const Icon(Icons.swap_horiz, size: 18),
-              label: Text('ห้อง ${classroom.code}'),
+                ),
+              ),
             ),
-          const SizedBox(width: AppSpacing.space2),
         ],
       ),
       body: RefreshIndicator(
@@ -107,8 +142,13 @@ class _TeacherStudentsTabState extends State<TeacherStudentsTab> {
                         AppSpacing.space3,
                       ),
                       child: Text(
-                        '${classroom.hierarchyLabel} • ${ThaiFormat.fullDate(controller.todayDate)}',
-                        style: AppTypography.supporting,
+                        'ม.${classroom.grade} • ${ThaiFormat.weekdayShortDate(controller.todayDate)}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.microLabel.copyWith(
+                          fontSize: 12,
+                          color: const Color(0xFF64748B),
+                        ),
                       ),
                     ),
 
@@ -236,12 +276,11 @@ class _StudentsToolbar extends StatelessWidget {
         AttendanceStatus.unknown: snapshot.unknownCount,
       },
       availableStatuses: <AttendanceStatus>[
+        AttendanceStatus.pending,
         AttendanceStatus.present,
         AttendanceStatus.late,
-        AttendanceStatus.absent,
         AttendanceStatus.leave,
-        if (snapshot.pendingCount > 0 || snapshot.isBeforeCutoff)
-          AttendanceStatus.pending,
+        AttendanceStatus.absent,
         if (snapshot.unknownCount > 0) AttendanceStatus.unknown,
       ],
       onChanged: onFilterChanged,
@@ -286,9 +325,6 @@ class _StudentRosterList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final inset = ResponsiveContent.horizontalInset(context);
-    final isDesktop = MediaQuery.sizeOf(context).width >= 640;
-
     final students = snapshot.students.where((student) {
       final matchesStatus =
           statusFilter == null || student.todayEntry.status == statusFilter;
@@ -310,104 +346,145 @@ class _StudentRosterList extends StatelessWidget {
       );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        if (isDesktop)
-          Container(
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              color: AppColors.surfaceSubtle,
-              border: Border(
-                top: BorderSide(color: AppColors.borderSubtle),
-                bottom: BorderSide(color: AppColors.borderSubtle),
-              ),
-            ),
-            padding: EdgeInsets.symmetric(horizontal: inset, vertical: 8),
-            child: Row(
-              children: <Widget>[
-                SizedBox(
-                  width: 28,
-                  child: Text('#', style: AppTypography.microLabel),
-                ),
-                const SizedBox(width: AppSpacing.space2),
-                Expanded(
-                  child: Text(
-                    'รายชื่อนักเรียน (${students.length})',
-                    style: AppTypography.microLabel,
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFFFFFFFF),
+        border: Border(
+          top: BorderSide(color: Color(0xFFE2E8E4)),
+          bottom: BorderSide(color: Color(0xFFE2E8E4)),
+        ),
+      ),
+      child: Column(
+        children: <Widget>[
+          for (var i = 0; i < students.length; i++) ...<Widget>[
+            _RosterStudentRow(
+              rollNumber: i + 1,
+              student: students[i],
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => StudentDetailScreen(
+                      studentId: students[i].studentId,
+                      initialDate: snapshot.date,
+                      isReadOnly: false,
+                    ),
                   ),
-                ),
-                const SizedBox(width: AppSpacing.space3),
-                SizedBox(
-                  width: 84,
-                  child: Text('รหัส', style: AppTypography.microLabel),
-                ),
-                const SizedBox(width: AppSpacing.space3),
-                SizedBox(
-                  width: 72,
-                  child: Text(
-                    'เวลาสแกน',
-                    textAlign: TextAlign.right,
-                    style: AppTypography.microLabel,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.space4),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(minWidth: 112),
-                  child: Text(
-                    'สถานะ',
-                    textAlign: TextAlign.right,
-                    style: AppTypography.microLabel,
-                  ),
-                ),
-                const SizedBox(width: 26),
-              ],
+                );
+              },
             ),
-          )
-        else
-          Padding(
-            padding: EdgeInsets.fromLTRB(inset, 0, inset, AppSpacing.space2),
-            child: Text(
-              'แสดงผล ${students.length} จาก ${snapshot.totalStudents} คน',
-              style: AppTypography.microLabel,
-            ),
-          ),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            border: Border(
-              top: isDesktop
-                  ? BorderSide.none
-                  : const BorderSide(color: AppColors.borderSubtle),
-              bottom: const BorderSide(color: AppColors.borderSubtle),
-            ),
-          ),
-          child: Column(
+            if (i < students.length - 1)
+              const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _RosterStudentRow extends StatelessWidget {
+  const _RosterStudentRow({
+    required this.rollNumber,
+    required this.student,
+    required this.onTap,
+  });
+
+  final int rollNumber;
+  final StudentAttendanceRecord student;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final entry = student.todayEntry;
+    final rollLabel = rollNumber.toString().padLeft(2, '0');
+    final maskedId = ThaiFormat.maskStudentId(student.studentId);
+
+    final String timestampLabel = switch (entry.status) {
+      AttendanceStatus.present || AttendanceStatus.late =>
+        entry.firstScanAt != null
+            ? ThaiFormat.time24Nbsp(entry.firstScanAt!)
+            : 'บันทึกแล้ว',
+      AttendanceStatus.pending => 'รอสแกน',
+      AttendanceStatus.absent => 'ไม่พบการสแกน',
+      AttendanceStatus.leave => 'แจ้งลา',
+      AttendanceStatus.unknown => 'รอซิงก์',
+    };
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              for (var i = 0; i < students.length; i++) ...<Widget>[
-                StudentAttendanceRow(
-                  record: students[i],
-                  entry: students[i].todayEntry,
-                  sequenceNumber: i + 1,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => StudentDetailScreen(
-                          studentId: students[i].studentId,
-                          initialDate: snapshot.date,
-                          isReadOnly: false,
-                        ),
-                      ),
-                    );
-                  },
+              SizedBox(
+                width: 32,
+                child: Text(
+                  rollLabel,
+                  style: AppTypography.bodyStrong.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF64748B),
+                    fontFeatures: const <FontFeature>[
+                      FontFeature.tabularFigures(),
+                    ],
+                  ),
                 ),
-                if (i < students.length - 1)
-                  Divider(indent: inset, endIndent: inset),
-              ],
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(
+                      student.fullName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.bodyStrong.copyWith(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'รหัส $maskedId',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.microLabel.copyWith(
+                        fontSize: 12,
+                        color: const Color(0xFF94A3B8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  AttendanceStatusChip(status: entry.status, compact: true),
+                  const SizedBox(height: 3),
+                  Text(
+                    timestampLabel,
+                    style: AppTypography.microLabel.copyWith(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF64748B),
+                      fontFeatures: const <FontFeature>[
+                        FontFeature.tabularFigures(),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
-      ],
+      ),
     );
   }
 }

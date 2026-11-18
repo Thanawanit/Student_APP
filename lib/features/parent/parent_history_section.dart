@@ -65,7 +65,6 @@ class _ParentHistorySectionState extends State<ParentHistorySection> {
     final inset = widget.useContainerInset
         ? ResponsiveContent.horizontalInset(context)
         : 0.0;
-    final isDesktop = MediaQuery.sizeOf(context).width >= 640;
 
     // Build distinct months available in student's actual history (newest first).
     final monthEntries = <String, DateTime>{};
@@ -127,38 +126,70 @@ class _ParentHistorySectionState extends State<ParentHistorySection> {
                 const SizedBox(height: AppSpacing.space3),
               ],
 
-              // Month selector + Date picker row
-              Wrap(
-                spacing: AppSpacing.space2,
-                runSpacing: AppSpacing.space2,
-                crossAxisAlignment: WrapCrossAlignment.center,
+              // Month selector + Date picker on a single horizontal row
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
-                  _MonthFilterStrip(
-                    monthEntries: monthEntries,
-                    selectedMonthKey: _selectedMonthKey,
-                    onSelected: (key) {
-                      setState(() {
-                        _selectedMonthKey = key;
-                        _selectedDateFilter = null;
-                      });
-                    },
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: () => _pickDate(context),
-                    icon: const Icon(Icons.calendar_today_outlined, size: 16),
-                    label: Text(
-                      _selectedDateFilter != null
-                          ? ThaiFormat.shortDate(_selectedDateFilter!)
-                          : 'เลือกวันที่',
+                  Expanded(
+                    child: _MonthFilterStrip(
+                      monthEntries: monthEntries,
+                      selectedMonthKey: _selectedMonthKey,
+                      onSelected: (key) {
+                        setState(() {
+                          _selectedMonthKey = key;
+                          _selectedDateFilter = null;
+                        });
+                      },
                     ),
                   ),
-                  if (_selectedDateFilter != null)
-                    TextButton(
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: () => _pickDate(context),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
+                      ),
+                      minimumSize: const Size(0, 36),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      side: const BorderSide(color: Color(0xFFE2E8E4)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    icon: const Icon(Icons.calendar_today_outlined, size: 15),
+                    label: Text(
+                      _selectedDateFilter != null
+                          ? ThaiFormat.shortDateTwoDigitYear(
+                              _selectedDateFilter!,
+                            )
+                          : 'เลือกวันที่',
+                      style: AppTypography.microLabel.copyWith(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF0F172A),
+                      ),
+                    ),
+                  ),
+                  if (_selectedDateFilter != null) ...<Widget>[
+                    const SizedBox(width: 4),
+                    IconButton(
+                      tooltip: 'ล้างวันที่',
                       onPressed: () {
                         setState(() => _selectedDateFilter = null);
                       },
-                      child: const Text('ล้างวันที่'),
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
+                      padding: EdgeInsets.zero,
+                      icon: const Icon(
+                        Icons.close,
+                        size: 16,
+                        color: Color(0xFF64748B),
+                      ),
                     ),
+                  ],
                 ],
               ),
               const SizedBox(height: AppSpacing.space2),
@@ -169,8 +200,8 @@ class _ParentHistorySectionState extends State<ParentHistorySection> {
                 availableStatuses: <AttendanceStatus>[
                   AttendanceStatus.present,
                   AttendanceStatus.late,
-                  AttendanceStatus.absent,
                   AttendanceStatus.leave,
+                  AttendanceStatus.absent,
                   if ((countsByStatus[AttendanceStatus.pending] ?? 0) > 0)
                     AttendanceStatus.pending,
                 ],
@@ -198,52 +229,13 @@ class _ParentHistorySectionState extends State<ParentHistorySection> {
               });
             },
           )
-        else ...<Widget>[
-          if (isDesktop)
-            Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: AppColors.surfaceSubtle,
-                border: Border(
-                  top: BorderSide(color: AppColors.borderSubtle),
-                  bottom: BorderSide(color: AppColors.borderSubtle),
-                ),
-              ),
-              padding: EdgeInsets.symmetric(horizontal: inset, vertical: 8),
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    child: Text('วันที่', style: AppTypography.microLabel),
-                  ),
-                  SizedBox(
-                    width: 72,
-                    child: Text(
-                      'เวลาสแกน',
-                      textAlign: TextAlign.right,
-                      style: AppTypography.microLabel,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.space4),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(minWidth: 112),
-                    child: Text(
-                      'สถานะ',
-                      textAlign: TextAlign.right,
-                      style: AppTypography.microLabel,
-                    ),
-                  ),
-                  const SizedBox(width: 26),
-                ],
-              ),
-            ),
+        else
           Container(
-            decoration: BoxDecoration(
-              color: AppColors.surface,
+            decoration: const BoxDecoration(
+              color: Color(0xFFFFFFFF),
               border: Border(
-                top: isDesktop
-                    ? BorderSide.none
-                    : const BorderSide(color: AppColors.borderSubtle),
-                bottom: const BorderSide(color: AppColors.borderSubtle),
+                top: BorderSide(color: Color(0xFFE2E8E4)),
+                bottom: BorderSide(color: Color(0xFFE2E8E4)),
               ),
             ),
             child: Column(
@@ -251,8 +243,6 @@ class _ParentHistorySectionState extends State<ParentHistorySection> {
                 for (var i = 0; i < filtered.length; i++) ...<Widget>[
                   _ParentHistoryRow(
                     entry: filtered[i],
-                    inset: inset,
-                    isDesktop: isDesktop,
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
@@ -266,12 +256,15 @@ class _ParentHistorySectionState extends State<ParentHistorySection> {
                     },
                   ),
                   if (i < filtered.length - 1)
-                    Divider(indent: inset, endIndent: inset),
+                    const Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: Color(0xFFF1F5F9),
+                    ),
                 ],
               ],
             ),
           ),
-        ],
       ],
     );
   }
@@ -293,7 +286,7 @@ class _MonthFilterStrip extends StatelessWidget {
     final options = <(String?, String)>[
       (null, 'ทุกเดือน'),
       for (final entry in monthEntries.entries)
-        (entry.key, ThaiFormat.monthYearShort(entry.value)),
+        (entry.key, ThaiFormat.monthYearTwoDigit(entry.value)),
     ];
 
     return SingleChildScrollView(
@@ -360,121 +353,111 @@ class _MonthFilterStrip extends StatelessWidget {
 }
 
 class _ParentHistoryRow extends StatelessWidget {
-  const _ParentHistoryRow({
-    required this.entry,
-    required this.inset,
-    required this.isDesktop,
-    required this.onTap,
-  });
+  const _ParentHistoryRow({required this.entry, required this.onTap});
 
   final DailyAttendanceEntry entry;
-  final double inset;
-  final bool isDesktop;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final String timeLabel = switch (entry.status) {
-      AttendanceStatus.present || AttendanceStatus.late =>
-        entry.firstScanAt != null ? ThaiFormat.time24(entry.firstScanAt!) : '—',
-      AttendanceStatus.pending => 'รอสแกน',
-      AttendanceStatus.absent => '—',
-      AttendanceStatus.leave => 'ลา',
-      AttendanceStatus.unknown => 'รอซิงก์',
-    };
+    final localDate = ThaiFormat.toBangkok(entry.date);
 
-    final String mobileSubtitle = switch (entry.status) {
+    final String scanSubtitle = switch (entry.status) {
       AttendanceStatus.present || AttendanceStatus.late =>
         entry.firstScanAt != null
-            ? 'สแกนเข้า ${ThaiFormat.time24(entry.firstScanAt!)}'
+            ? 'สแกนเข้า ${ThaiFormat.time24Nbsp(entry.firstScanAt!)}'
             : 'บันทึกแล้ว',
-      AttendanceStatus.pending => 'ยังไม่พบการสแกน • รอยืนยัน',
+      AttendanceStatus.pending => 'ยังไม่พบการสแกน',
       AttendanceStatus.absent => 'ไม่พบการสแกน',
       AttendanceStatus.leave => 'มีบันทึกการลา',
       AttendanceStatus.unknown => 'รอข้อมูลซิงก์',
     };
 
-    return InkWell(
-      onTap: onTap,
-      hoverColor: AppColors.surfaceSubtle.withValues(alpha: 0.7),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          minHeight: AppSpacing.minTouchTarget + 10,
-        ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: inset,
-            vertical: isDesktop ? 10 : 12,
-          ),
-          child: isDesktop
-              ? Row(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              SizedBox(
+                width: 52,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    Expanded(
-                      child: Text(
-                        ThaiFormat.fullDate(entry.date),
-                        style: AppTypography.bodyStrong,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.space3),
-                    SizedBox(
-                      width: 72,
-                      child: Text(
-                        timeLabel,
-                        textAlign: TextAlign.right,
-                        style: AppTypography.supporting.copyWith(
-                          color: entry.firstScanAt != null
-                              ? AppColors.textPrimary
-                              : AppColors.textSecondary,
-                          fontWeight: entry.firstScanAt != null
-                              ? FontWeight.w500
-                              : FontWeight.w400,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.space4),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(minWidth: 112),
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: AttendanceStatusChip(
-                          status: entry.status,
-                          compact: true,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.space2),
-                    const Icon(
-                      Icons.chevron_right,
-                      size: 18,
-                      color: AppColors.textDisabled,
-                    ),
-                  ],
-                )
-              : Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            ThaiFormat.fullDate(entry.date),
-                            style: AppTypography.bodyStrong,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(mobileSubtitle, style: AppTypography.microLabel),
+                    Text(
+                      '${localDate.day}',
+                      style: AppTypography.sectionTitle.copyWith(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF0F172A),
+                        height: 1.1,
+                        fontFeatures: const <FontFeature>[
+                          FontFeature.tabularFigures(),
                         ],
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.space2),
-                    AttendanceStatusChip(status: entry.status, compact: true),
-                    const SizedBox(width: AppSpacing.space1),
-                    const Icon(
-                      Icons.chevron_right,
-                      size: 18,
-                      color: AppColors.textDisabled,
+                    Text(
+                      ThaiFormat.shortMonth(entry.date),
+                      style: AppTypography.microLabel.copyWith(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF64748B),
+                      ),
                     ),
                   ],
                 ),
+              ),
+              Container(
+                width: 1,
+                height: 32,
+                color: const Color(0xFFE2E8E4),
+                margin: const EdgeInsets.symmetric(horizontal: 12),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(
+                      ThaiFormat.weekdayAndYear(entry.date),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.bodyStrong.copyWith(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      scanSubtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.microLabel.copyWith(
+                        fontSize: 12,
+                        color: const Color(0xFF64748B),
+                        fontFeatures: const <FontFeature>[
+                          FontFeature.tabularFigures(),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              AttendanceStatusChip(status: entry.status, compact: true),
+              const SizedBox(width: 4),
+              const Icon(
+                Icons.chevron_right,
+                size: 18,
+                color: Color(0xFF94A3B8),
+              ),
+            ],
+          ),
         ),
       ),
     );

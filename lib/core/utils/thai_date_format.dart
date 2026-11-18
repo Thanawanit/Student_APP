@@ -82,6 +82,33 @@ abstract final class ThaiFormat {
     return '$month $buddhistYear';
   }
 
+  /// Example: `พ.ย. 69`
+  static String monthYearTwoDigit(DateTime date) {
+    final d = toBangkok(date);
+    final month = _monthsShort[d.month - 1];
+    final buddhistYearShort = (d.year + 543) % 100;
+    return '$month ${buddhistYearShort.toString().padLeft(2, '0')}';
+  }
+
+  /// Example: `วันจันทร์ที่ 16 พ.ย. 2569`
+  static String weekdayShortDate(DateTime date) {
+    final d = toBangkok(date);
+    final weekday = _weekdays[d.weekday - 1];
+    final month = _monthsShort[d.month - 1];
+    final buddhistYear = d.year + 543;
+    return 'วัน$weekdayที่ ${d.day} $month $buddhistYear';
+  }
+
+  /// Example: `พ.ย.`
+  static String shortMonth(DateTime date) =>
+      _monthsShort[toBangkok(date).month - 1];
+
+  /// Example: `วันจันทร์ • 2569`
+  static String weekdayAndYear(DateTime date) {
+    final d = toBangkok(date);
+    return 'วัน${_weekdays[d.weekday - 1]} • ${d.year + 543}';
+  }
+
   /// Example: `16–20 พ.ย. 2569`
   static String schoolWeekRange(DateTime anchorDate) {
     final d = toBangkok(anchorDate);

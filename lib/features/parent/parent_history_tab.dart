@@ -19,7 +19,11 @@ class ParentHistoryTab extends StatelessWidget {
     final inset = ResponsiveContent.horizontalInset(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('ประวัติการเข้าเรียน')),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        titleSpacing: inset,
+        title: const Text('ประวัติการเข้าเรียน'),
+      ),
       body: ListView(
         padding: const EdgeInsets.only(bottom: AppSpacing.space6),
         children: <Widget>[
@@ -39,18 +43,14 @@ class ParentHistoryTab extends StatelessWidget {
                           inset,
                           AppSpacing.space3,
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(
-                              record.fullName,
-                              style: AppTypography.bodyStrong,
-                            ),
-                            Text(
-                              '${record.classroom.hierarchyLabel} • รหัส ${ThaiFormat.maskStudentId(record.studentId)}',
-                              style: AppTypography.supporting,
-                            ),
-                          ],
+                        child: Text(
+                          '${record.fullName} • ม.${record.classroom.grade}/${record.classroom.room} (รหัส ${ThaiFormat.maskStudentId(record.studentId)})',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.supporting.copyWith(
+                            fontSize: 12.5,
+                            color: const Color(0xFF64748B),
+                          ),
                         ),
                       ),
                       ParentHistorySection(
