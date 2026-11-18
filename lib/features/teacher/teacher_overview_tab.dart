@@ -15,8 +15,8 @@ import '../../state/app_controller.dart';
 import '../shared/student_detail_screen.dart';
 import 'class_selection_screen.dart';
 
-/// Teacher Dashboard Overview screen with soft greenish-gray canvas (#F2F5F3)
-/// and elevated white card hierarchy.
+/// Teacher Dashboard Overview screen (`ภาพรวม`) with compact 2-line header,
+/// collapsible hero summary card, and filterable student follow-up cards.
 class TeacherOverviewTab extends StatelessWidget {
   const TeacherOverviewTab({
     super.key,
@@ -38,7 +38,7 @@ class TeacherOverviewTab extends StatelessWidget {
       backgroundColor: const Color(0xFFF2F5F3),
       body: Column(
         children: <Widget>[
-          _TeacherHeader(
+          _CompactTeacherHeader(
             inset: inset,
             classroom: classroom,
             todayDate: controller.todayDate,
@@ -124,8 +124,8 @@ class TeacherOverviewTab extends StatelessWidget {
   }
 }
 
-class _TeacherHeader extends StatelessWidget {
-  const _TeacherHeader({
+class _CompactTeacherHeader extends StatelessWidget {
+  const _CompactTeacherHeader({
     required this.inset,
     required this.classroom,
     required this.todayDate,
@@ -144,24 +144,20 @@ class _TeacherHeader extends StatelessWidget {
     final currentRoom = classroom;
     final freshness = syncMetadata?.freshness;
     final lastSynced = syncMetadata?.lastSyncedAt;
-    final buddhistYear = todayDate.year + 543;
 
-    final Color freshnessColor = switch (freshness) {
-      SyncFreshness.fresh => AppColors.presentForeground,
-      SyncFreshness.delayed => AppColors.lateForeground,
-      SyncFreshness.unavailable => AppColors.absentForeground,
-      null => AppColors.textDisabled,
-    };
-
-    final String freshnessText = switch (freshness) {
+    final String syncLabel = switch (freshness) {
       SyncFreshness.fresh =>
         lastSynced != null
             ? 'อัปเดต ${ThaiFormat.time24Nbsp(lastSynced)}'
-            : 'ล่าสุด',
+            : 'อัปเดตล่าสุด',
       SyncFreshness.delayed => 'ซิงก์ล่าช้า',
       SyncFreshness.unavailable => 'รอการซิงก์',
       null => 'กำลังโหลด',
     };
+
+    final String subtitleText = currentRoom != null
+        ? 'ม.${currentRoom.grade} • $syncLabel'
+        : syncLabel;
 
     return Container(
       width: double.infinity,
@@ -178,94 +174,77 @@ class _TeacherHeader extends StatelessWidget {
             inset,
             AppSpacing.space3,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              Row(
-                children: <Widget>[
-                  const SchoolLogoMark(size: 26),
-                  const SizedBox(width: AppSpacing.space2),
-                  if (currentRoom != null)
-                    InkWell(
-                      onTap: onSwitchRoom,
-                      borderRadius: BorderRadius.circular(AppRadius.control),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(minHeight: 40),
+              const SchoolLogoMark(size: 30),
+              const SizedBox(width: AppSpacing.space3),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    if (currentRoom != null)
+                      InkWell(
+                        onTap: onSwitchRoom,
+                        borderRadius: BorderRadius.circular(AppRadius.badge),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.space2,
-                            vertical: 4,
-                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 2),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: <Widget>[
-                              Text(
-                                currentRoom.roomLabel,
-                                style: AppTypography.sectionTitle.copyWith(
-                                  color: AppColors.textPrimary,
+                              Flexible(
+                                child: Text(
+                                  currentRoom.roomLabel,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTypography.sectionTitle.copyWith(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textPrimary,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 2),
                               const Icon(
                                 Icons.keyboard_arrow_down,
-                                size: 18,
+                                size: 20,
                                 color: AppColors.brandPrimary,
                               ),
                             ],
                           ),
                         ),
                       ),
+                    Text(
+                      subtitleText,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.microLabel.copyWith(
+                        fontSize: 12,
+                        color: const Color(0xFF64748B),
+                      ),
                     ),
-                  const Spacer(),
-                  Flexible(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: <Widget>[
-                        Text(
-                          ThaiFormat.shortDate(todayDate),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.supporting.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            Container(
-                              width: 6,
-                              height: 6,
-                              decoration: BoxDecoration(
-                                color: freshnessColor,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Flexible(
-                              child: Text(
-                                freshnessText,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTypography.microLabel,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              if (currentRoom != null) ...<Widget>[
-                const SizedBox(height: 2),
-                Text(
-                  'ชั้นมัธยมศึกษาปีที่ ${currentRoom.grade} • ปีการศึกษา $buddhistYear',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.microLabel,
+                  ],
                 ),
-              ],
+              ),
+              const SizedBox(width: AppSpacing.space2),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2E8E4),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: Text(
+                  ThaiFormat.shortDateTwoDigitYear(todayDate),
+                  style: AppTypography.microLabel.copyWith(
+                    color: const Color(0xFF334155),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
             ],
           ),
         ),

@@ -66,6 +66,14 @@ abstract final class ThaiFormat {
     return '${d.day} $month $buddhistYear';
   }
 
+  /// Example: `16 พ.ย. 69`
+  static String shortDateTwoDigitYear(DateTime date) {
+    final d = toBangkok(date);
+    final month = _monthsShort[d.month - 1];
+    final buddhistYearShort = (d.year + 543) % 100;
+    return '${d.day} $month ${buddhistYearShort.toString().padLeft(2, '0')}';
+  }
+
   /// Example: `พ.ย. 2569`
   static String monthYearShort(DateTime date) {
     final d = toBangkok(date);

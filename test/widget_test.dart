@@ -57,21 +57,18 @@ void main() {
       await tester.pumpAndSettle();
 
       // Screen A: Teacher Overview (no full 12-student table here)
-      expect(
-        find.text('ชั้นมัธยมศึกษาปีที่ 5 • ปีการศึกษา 2569'),
-        findsOneWidget,
-      );
-      expect(find.text('จาก 12 คน'), findsOneWidget);
+      expect(find.textContaining('ม.5 • อัปเดต'), findsOneWidget);
+      expect(find.text('16 พ.ย. 69'), findsOneWidget);
       expect(find.text('75%'), findsOneWidget);
-      expect(find.text('สแกนเข้าโรงเรียนแล้ว'), findsOneWidget);
-      expect(find.textContaining('ยังไม่พบการสแกน'), findsOneWidget);
-      expect(find.textContaining('มาสายวันนี้'), findsOneWidget);
-      expect(find.text('ดูรายชื่อทั้งหมด →'), findsOneWidget);
+      expect(find.text('สแกนเข้าเรียนแล้ว'), findsOneWidget);
+      expect(find.text('ดูรายละเอียดสถานะ'), findsOneWidget);
+      expect(find.text('ต้องติดตามวันนี้ (4)'), findsOneWidget);
+      expect(find.text('ดูทั้งหมด →'), findsOneWidget);
 
       // Open dedicated Student List screen
-      await tester.ensureVisible(find.text('ดูรายชื่อทั้งหมด →'));
+      await tester.ensureVisible(find.text('ดูทั้งหมด →'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('ดูรายชื่อทั้งหมด →'));
+      await tester.tap(find.text('ดูทั้งหมด →'));
       await tester.pumpAndSettle();
 
       // Screen B: Dedicated Student List
