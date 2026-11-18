@@ -62,6 +62,22 @@ class ClassroomIntelligencePanel extends StatelessWidget {
             return bt.compareTo(at);
           });
 
+    final scannedStudents =
+        snapshot.students
+            .where((s) => s.todayEntry.firstScanAt != null)
+            .toList()
+          ..sort(
+            (a, b) =>
+                b.todayEntry.firstScanAt!.compareTo(a.todayEntry.firstScanAt!),
+          );
+    final latestScanStudent = scannedStudents.isNotEmpty
+        ? scannedStudents.first
+        : null;
+
+    final leaveStudents = snapshot.students
+        .where((s) => s.todayEntry.status == AttendanceStatus.leave)
+        .toList();
+
     final heroCard = _WhiteHeroBentoCard(
       checkedIn: checkedIn,
       total: total,
@@ -70,6 +86,11 @@ class ClassroomIntelligencePanel extends StatelessWidget {
       lateCount: snapshot.lateCount,
       pendingCount: snapshot.pendingCount + snapshot.unknownCount,
       leaveOrAbsentCount: snapshot.leaveCount + snapshot.absentCount,
+      latestScanStudent: latestScanStudent,
+      leaveStudents: leaveStudents,
+      onTapLatestStudent: latestScanStudent != null && onTapStudent != null
+          ? () => onTapStudent!(latestScanStudent)
+          : null,
       onTapStatus: onOpenStudentList,
     );
 
@@ -125,6 +146,9 @@ class _WhiteHeroBentoCard extends StatelessWidget {
     required this.lateCount,
     required this.pendingCount,
     required this.leaveOrAbsentCount,
+    required this.latestScanStudent,
+    required this.leaveStudents,
+    this.onTapLatestStudent,
     this.onTapStatus,
   });
 
@@ -135,6 +159,9 @@ class _WhiteHeroBentoCard extends StatelessWidget {
   final int lateCount;
   final int pendingCount;
   final int leaveOrAbsentCount;
+  final StudentAttendanceRecord? latestScanStudent;
+  final List<StudentAttendanceRecord> leaveStudents;
+  final VoidCallback? onTapLatestStudent;
   final ValueChanged<AttendanceStatus?>? onTapStatus;
 
   @override
@@ -398,8 +425,15 @@ class _WhiteHeroBentoCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
 
-                  // 4. Secondary Insight & Weekly Trend Footer
-                  _WeeklyInsightFooter(),
+                  // 4. Real-time Actionable Classroom Insights
+                  _ActionableInsightFeed(
+                    latestScanStudent: latestScanStudent,
+                    leaveStudents: leaveStudents,
+                    onTapLatestStudent: onTapLatestStudent,
+                    onTapLeave: onTapStatus != null
+                        ? () => onTapStatus!(AttendanceStatus.leave)
+                        : null,
+                  ),
                 ],
               ),
             ),
@@ -410,127 +444,175 @@ class _WhiteHeroBentoCard extends StatelessWidget {
   }
 }
 
-class _WeeklyInsightFooter extends StatelessWidget {
-  const _WeeklyInsightFooter();
+class _ActionableInsightFeed extends StatelessWidget {
+  const _ActionableInsightFeed({
+    required this.latestScanStudent,
+    required this.leaveStudents,
+    this.onTapLatestStudent,
+    this.onTapLeave,
+  });
 
-  static const List<({String day, double height, Color color})> _sparkBars =
-      <({String day, double height, Color color})>[
-        (day: 'จ', height: 16, color: Color(0xFF10B981)),
-        (day: 'อ', height: 24, color: Color(0xFFE4E4E7)),
-        (day: 'พ', height: 24, color: Color(0xFFE4E4E7)),
-        (day: 'พฤ', height: 24, color: Color(0xFFE4E4E7)),
-        (day: 'ศ', height: 24, color: Color(0xFFE4E4E7)),
-      ];
+  final StudentAttendanceRecord? latestScanStudent;
+  final List<StudentAttendanceRecord> leaveStudents;
+  final VoidCallback? onTapLatestStudent;
+  final VoidCallback? onTapLeave;
+
+  String _formatLeaveSummary() {
+    if (leaveStudents.isEmpty) {
+      return 'ไม่มีรายการแจ้งลา';
+    }
+    return leaveStudents
+        .map((s) {
+          final firstName = s.fullName.trim().split(RegExp(r'\s+')).first;
+          final audits = s.todayEntry.auditEntries;
+          final note = audits.isNotEmpty ? audits.last.note?.trim() : null;
+          if (note != null && note.isNotEmpty) {
+            return '$firstName ($note)';
+          }
+          return '$firstName (แจ้งลา)';
+        })
+        .join(', ');
+  }
 
   @override
   Widget build(BuildContext context) {
+    final latest = latestScanStudent;
+    final scanAt = latest?.todayEntry.firstScanAt;
+    final isLate = latest?.todayEntry.status == AttendanceStatus.late;
+
+    final String latestPillText = latest != null && scanAt != null
+        ? '${ThaiFormat.time24Nbsp(scanAt)} • ${isLate ? 'สาย' : latest.todayEntry.status.label}'
+        : 'รอสแกน';
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xFFFAFAFA),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFFF4F4F5)),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+          // Row 1: Live Latest Check-in
+          InkWell(
+            onTap: onTapLatestStudent,
+            borderRadius: BorderRadius.circular(8),
+            child: Row(
               children: <Widget>[
-                Text(
-                  'เวลาสแกนเข้าเฉลี่ย',
-                  style: AppTypography.microLabel.copyWith(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF71717A),
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF10B981),
+                    shape: BoxShape.circle,
                   ),
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  '07:44\u00A0น.',
-                  style: AppTypography.sectionTitle.copyWith(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF09090B),
-                    fontFeatures: const <FontFeature>[
-                      FontFeature.tabularFigures(),
-                    ],
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text.rich(
+                    TextSpan(
+                      children: <InlineSpan>[
+                        TextSpan(
+                          text: 'ล่าสุด: ',
+                          style: AppTypography.microLabel.copyWith(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF71717A),
+                          ),
+                        ),
+                        TextSpan(
+                          text: latest?.fullName ?? 'ยังไม่มีการสแกนวันนี้',
+                          style: AppTypography.microLabel.copyWith(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF09090B),
+                          ),
+                        ),
+                      ],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  'เร็วกว่าเมื่อวาน 6 นาที',
-                  style: AppTypography.microLabel.copyWith(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF059669),
+                const SizedBox(width: 8),
+                Flexible(
+                  fit: FlexFit.loose,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isLate
+                          ? const Color(0xFFFEF3C7)
+                          : const Color(0xFFECFDF5),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      latestPillText,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.microLabel.copyWith(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: isLate
+                            ? const Color(0xFFB45309)
+                            : const Color(0xFF059669),
+                        fontFeatures: const <FontFeature>[
+                          FontFeature.tabularFigures(),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          Container(
-            width: 1,
-            height: 42,
-            color: const Color(0xFFE4E4E7),
-            margin: const EdgeInsets.symmetric(horizontal: 12),
-          ),
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+          const Divider(height: 18, thickness: 1, color: Color(0xFFEEEEEE)),
+          // Row 2: Today's Leave & Absence Notes
+          InkWell(
+            onTap: onTapLeave,
+            borderRadius: BorderRadius.circular(8),
+            child: Row(
               children: <Widget>[
-                Text(
-                  'แนวโน้มสัปดาห์นี้',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.microLabel.copyWith(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF71717A),
+                const Icon(
+                  Icons.assignment_ind_outlined,
+                  size: 15,
+                  color: Color(0xFF3B82F6),
+                ),
+                const SizedBox(width: 7),
+                Expanded(
+                  child: Text.rich(
+                    TextSpan(
+                      children: <InlineSpan>[
+                        TextSpan(
+                          text: 'แจ้งลา (${leaveStudents.length}): ',
+                          style: AppTypography.microLabel.copyWith(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF71717A),
+                          ),
+                        ),
+                        TextSpan(
+                          text: _formatLeaveSummary(),
+                          style: AppTypography.microLabel.copyWith(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF334155),
+                          ),
+                        ),
+                      ],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(height: 6),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      for (var i = 0; i < _sparkBars.length; i++) ...<Widget>[
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            SizedBox(
-                              height: 26,
-                              child: Align(
-                                alignment: Alignment.bottomCenter,
-                                child: Container(
-                                  width: 10,
-                                  height: _sparkBars[i].height,
-                                  decoration: BoxDecoration(
-                                    color: _sparkBars[i].color,
-                                    borderRadius: BorderRadius.circular(3),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _sparkBars[i].day,
-                              style: AppTypography.microLabel.copyWith(
-                                fontSize: 9.5,
-                                color: const Color(0xFF94A3B8),
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (i < _sparkBars.length - 1) const SizedBox(width: 6),
-                      ],
-                    ],
-                  ),
+                const SizedBox(width: 6),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 16,
+                  color: Color(0xFF94A3B8),
                 ),
               ],
             ),
