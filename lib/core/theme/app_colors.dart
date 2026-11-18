@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 /// Light Editorial × Data Intelligence color system (Apple Health / Linear inspired).
 abstract final class AppColors {
-  static const Color background = Color(0xFFF9F9F7);
+  static const Color background = Color(0xFFF7F8F6);
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color surfaceSubtle = Color(0xFFF1F2EF);
+  static const Color surfaceSubtle = Color(0xFFEEEEEC);
 
-  static const Color textPrimary = Color(0xFF161918);
-  static const Color textSecondary = Color(0xFF626A66);
+  static const Color textPrimary = Color(0xFF18221F);
+  static const Color textSecondary = Color(0xFF5C6863);
   static const Color textDisabled = Color(0xFF9EA5A1);
 
   static const Color borderSubtle = Color(0xFFE5E7E3);

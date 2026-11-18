@@ -6,12 +6,12 @@ import '../../core/theme/app_typography.dart';
 import '../../core/utils/thai_date_format.dart';
 import '../../domain/models/attendance_models.dart';
 import '../../domain/models/attendance_status.dart';
+import 'status_chip.dart';
 
-/// Classroom Intelligence Composition for the Teacher Dashboard:
-/// - Left/Top: Primary detected count + percentage + cutoff phase (single source of truth)
-/// - Right/Bottom: Unified multi-segment bar paired with interactive 1-line breakdown legend
-/// - Below / Right column on wide screens: Two distinct attention streams
-///   separating undetected/unresolved students from late arrivals.
+/// Light Editorial × Swiss Data Design overview for Teacher Dashboard.
+/// Replaces Bento cards with open editorial sections, large tabular typography,
+/// one segmented progress bar, a 4-column inline distribution, and one unified
+/// attention list divided by thin horizontal hairlines.
 class ClassroomIntelligencePanel extends StatelessWidget {
   const ClassroomIntelligencePanel({
     super.key,
@@ -34,14 +34,14 @@ class ClassroomIntelligencePanel extends StatelessWidget {
 
     final String phaseLabel;
     if (snapshot.syncMetadata.freshness == SyncFreshness.unavailable) {
-      phaseLabel = 'รอซิงก์ข้อมูล';
+      phaseLabel = 'รอข้อมูลซิงก์ล่าสุด';
     } else if (snapshot.isBeforeCutoff) {
-      phaseLabel = 'ก่อน 09:00 น.';
+      phaseLabel = 'ก่อนตัดรอบ 09:00 น.';
     } else {
-      phaseLabel = 'สรุปผลแล้ว';
+      phaseLabel = 'สรุปผลประจำวันแล้ว';
     }
 
-    // Separate unresolved/not-yet-detected students from late arrivals.
+    // Group A: Students not yet detected / absent / sync unknown.
     final undetectedStudents =
         snapshot.students.where((s) {
           final status = s.todayEntry.status;
@@ -58,6 +58,7 @@ class ClassroomIntelligencePanel extends StatelessWidget {
           return rank(a.todayEntry.status).compareTo(rank(b.todayEntry.status));
         });
 
+    // Group B: Late students (detected >= 08:00).
     final lateStudents =
         snapshot.students
             .where((s) => s.todayEntry.status == AttendanceStatus.late)
@@ -71,64 +72,72 @@ class ClassroomIntelligencePanel extends StatelessWidget {
             return bt.compareTo(at);
           });
 
-    final breakdown = <_DistributionItem>[
+    final fourColumnItems = <_DistributionItem>[
       _DistributionItem(AttendanceStatus.present, snapshot.presentCount),
       _DistributionItem(AttendanceStatus.late, snapshot.lateCount),
-      if (snapshot.isBeforeCutoff || snapshot.pendingCount > 0)
+      if (snapshot.unknownCount > 0)
+        _DistributionItem(AttendanceStatus.unknown, snapshot.unknownCount)
+      else if (snapshot.isBeforeCutoff || snapshot.pendingCount > 0)
         _DistributionItem(AttendanceStatus.pending, snapshot.pendingCount)
       else
         _DistributionItem(AttendanceStatus.absent, snapshot.absentCount),
-      if (snapshot.leaveCount > 0)
-        _DistributionItem(AttendanceStatus.leave, snapshot.leaveCount),
-      if (snapshot.unknownCount > 0)
-        _DistributionItem(AttendanceStatus.unknown, snapshot.unknownCount),
+      _DistributionItem(AttendanceStatus.leave, snapshot.leaveCount),
     ];
+
+    final overviewSection = _EditorialAttendanceOverview(
+      checkedIn: checkedIn,
+      total: total,
+      ratePercent: ratePercent,
+      phaseLabel: phaseLabel,
+      items: fourColumnItems,
+      onTapStatus: onOpenStudentList,
+    );
+
+    final attentionSection = _UnifiedAttentionSection(
+      totalStudents: total,
+      isBeforeCutoff: snapshot.isBeforeCutoff,
+      undetectedStudents: undetectedStudents,
+      lateStudents: lateStudents,
+      onTapStudent: onTapStudent,
+      onOpenStudentList: onOpenStudentList,
+    );
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isWideDesktop = constraints.maxWidth >= 820;
-
-        final intelligenceBlock = _AttendanceSplitVisual(
-          inset: inset,
-          checkedIn: checkedIn,
-          total: total,
-          ratePercent: ratePercent,
-          phaseLabel: phaseLabel,
-          breakdown: breakdown,
-          onTapStatus: onOpenStudentList,
-        );
-
-        final triageBlock = _AttentionTriageArea(
-          inset: inset,
-          totalStudents: total,
-          isBeforeCutoff: snapshot.isBeforeCutoff,
-          undetectedStudents: undetectedStudents,
-          lateStudents: lateStudents,
-          onTapStudent: onTapStudent,
-          onOpenStudentList: onOpenStudentList,
-        );
+        final isWideDesktop = constraints.maxWidth >= 840;
 
         if (isWideDesktop) {
           return Padding(
             padding: EdgeInsets.symmetric(horizontal: inset),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Expanded(flex: 5, child: intelligenceBlock),
-                const SizedBox(width: AppSpacing.space6),
-                Expanded(flex: 7, child: triageBlock),
-              ],
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Expanded(flex: 5, child: overviewSection),
+                  const VerticalDivider(
+                    width: AppSpacing.space8,
+                    thickness: 1,
+                    color: AppColors.borderSubtle,
+                  ),
+                  Expanded(flex: 7, child: attentionSection),
+                ],
+              ),
             ),
           );
         }
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            intelligenceBlock,
-            const SizedBox(height: AppSpacing.space4),
-            triageBlock,
-          ],
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: inset),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              overviewSection,
+              const SizedBox(height: AppSpacing.space6),
+              const Divider(),
+              const SizedBox(height: AppSpacing.space5),
+              attentionSection,
+            ],
+          ),
         );
       },
     );
@@ -142,171 +151,132 @@ class _DistributionItem {
   final int count;
 }
 
-class _AttendanceSplitVisual extends StatelessWidget {
-  const _AttendanceSplitVisual({
-    required this.inset,
+class _EditorialAttendanceOverview extends StatelessWidget {
+  const _EditorialAttendanceOverview({
     required this.checkedIn,
     required this.total,
     required this.ratePercent,
     required this.phaseLabel,
-    required this.breakdown,
+    required this.items,
     this.onTapStatus,
   });
 
-  final double inset;
   final int checkedIn;
   final int total;
   final int ratePercent;
   final String phaseLabel;
-  final List<_DistributionItem> breakdown;
+  final List<_DistributionItem> items;
   final ValueChanged<AttendanceStatus?>? onTapStatus;
 
   @override
   Widget build(BuildContext context) {
-    final textScale = MediaQuery.textScalerOf(context).scale(1);
-    final isWideContainer = MediaQuery.sizeOf(context).width >= 820;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        // TOP: Label left, Percentage badge right
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Expanded(
+              child: Text(
+                'สแกนเข้าโรงเรียนแล้ว',
+                style: AppTypography.supporting.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.space2),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: AppColors.brandPrimarySoft,
+                borderRadius: BorderRadius.circular(AppRadius.badge),
+              ),
+              child: Text(
+                '$ratePercent%',
+                style: AppTypography.microLabel.copyWith(
+                  color: AppColors.brandPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.space1),
 
-    return Container(
-      margin: isWideContainer
-          ? EdgeInsets.zero
-          : EdgeInsets.symmetric(horizontal: inset),
-      padding: const EdgeInsets.all(AppSpacing.space4),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.panel),
-        border: Border.all(color: AppColors.borderSubtle),
-      ),
-      child: LayoutBuilder(
-        builder: (context, box) {
-          // Use asymmetric horizontal split on 360dp standard scale; stack cleanly on large accessibility text
-          final canSplitHorizontal =
-              box.maxWidth >= 280 && textScale <= 1.25 && !isWideContainer;
-
-          final primaryMetric = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
+        // PRIMARY METRIC: Large figure + "จาก 12 คน" beside it
+        Semantics(
+          label:
+              'สแกนเข้าโรงเรียนแล้ว $checkedIn จาก $total คน คิดเป็นร้อยละ $ratePercent',
+          child: Wrap(
+            crossAxisAlignment: WrapCrossAlignment.end,
+            spacing: AppSpacing.space2,
+            runSpacing: 2,
             children: <Widget>[
               Text(
-                'สแกนเข้าโรงเรียนแล้ว',
-                style: AppTypography.microLabel.copyWith(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w600,
+                '$checkedIn',
+                style: AppTypography.display.copyWith(
+                  fontSize: 46,
+                  color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 6),
-              Semantics(
-                label:
-                    'สแกนเข้าโรงเรียนแล้ว $checkedIn จาก $total คน คิดเป็นร้อยละ $ratePercent',
-                child: Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.end,
-                  spacing: 4,
-                  children: <Widget>[
-                    Text(
-                      '$checkedIn',
-                      style: AppTypography.display.copyWith(
-                        fontSize: 40,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      '/$total คน',
-                      style: AppTypography.sectionTitle.copyWith(
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
-                        fontFeatures: const <FontFeature>[
-                          FontFeature.tabularFigures(),
-                        ],
-                      ),
-                    ),
-                  ],
+              Padding(
+                padding: const EdgeInsets.only(bottom: 5),
+                child: Text(
+                  'จาก $total คน',
+                  style: AppTypography.sectionTitle.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                    fontFeatures: const <FontFeature>[
+                      FontFeature.tabularFigures(),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 6),
-              Row(
-                children: <Widget>[
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.brandPrimarySoft,
-                      borderRadius: BorderRadius.circular(AppRadius.badge),
-                    ),
-                    child: Text(
-                      '$ratePercent%',
-                      style: AppTypography.microLabel.copyWith(
-                        color: AppColors.brandPrimary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      phaseLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.microLabel,
-                    ),
-                  ),
-                ],
+              Padding(
+                padding: const EdgeInsets.only(bottom: 7),
+                child: Text('· $phaseLabel', style: AppTypography.microLabel),
               ),
             ],
-          );
+          ),
+        ),
+        const SizedBox(height: AppSpacing.space3),
 
-          final distributionPanel = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        // BELOW: One horizontal segmented progress bar
+        _SegmentedProgressBar(items: items),
+        const SizedBox(height: AppSpacing.space3),
+
+        // BELOW THE BAR: Compact 4-column attendance distribution (open, no cards)
+        IntrinsicHeight(
+          child: Row(
             children: <Widget>[
-              _UnifiedProportionBar(items: breakdown),
-              const SizedBox(height: AppSpacing.space3),
-              for (var i = 0; i < breakdown.length; i++) ...<Widget>[
-                _DistributionLegendRow(
-                  item: breakdown[i],
-                  onTap: onTapStatus != null
-                      ? () => onTapStatus!(breakdown[i].status)
-                      : null,
+              for (var i = 0; i < items.length; i++) ...<Widget>[
+                Expanded(
+                  child: _CompactDistributionColumn(
+                    item: items[i],
+                    onTap: onTapStatus != null
+                        ? () => onTapStatus!(items[i].status)
+                        : null,
+                  ),
                 ),
-                if (i < breakdown.length - 1) const SizedBox(height: 2),
-              ],
-            ],
-          );
-
-          if (canSplitHorizontal) {
-            return IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  Expanded(flex: 45, child: primaryMetric),
+                if (i < items.length - 1)
                   const VerticalDivider(
-                    width: AppSpacing.space5,
+                    width: AppSpacing.space3,
                     thickness: 1,
                     color: AppColors.borderSubtle,
                   ),
-                  Expanded(flex: 55, child: distributionPanel),
-                ],
-              ),
-            );
-          }
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              primaryMetric,
-              const SizedBox(height: AppSpacing.space3),
-              const Divider(),
-              const SizedBox(height: AppSpacing.space3),
-              distributionPanel,
+              ],
             ],
-          );
-        },
-      ),
+          ),
+        ),
+      ],
     );
   }
 }
 
-class _UnifiedProportionBar extends StatelessWidget {
-  const _UnifiedProportionBar({required this.items});
+class _SegmentedProgressBar extends StatelessWidget {
+  const _SegmentedProgressBar({required this.items});
 
   final List<_DistributionItem> items;
 
@@ -343,8 +313,8 @@ class _UnifiedProportionBar extends StatelessWidget {
   }
 }
 
-class _DistributionLegendRow extends StatelessWidget {
-  const _DistributionLegendRow({required this.item, this.onTap});
+class _CompactDistributionColumn extends StatelessWidget {
+  const _CompactDistributionColumn({required this.item, this.onTap});
 
   final _DistributionItem item;
   final VoidCallback? onTap;
@@ -355,45 +325,49 @@ class _DistributionLegendRow extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.badge),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-        child: Row(
-          children: <Widget>[
-            Container(
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(
-                color: item.status.foregroundColor,
-                shape: BoxShape.circle,
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  color: item.status.foregroundColor,
+                  shape: BoxShape.circle,
+                ),
               ),
-            ),
-            const SizedBox(width: AppSpacing.space2),
-            Expanded(
-              child: Text(
+              const SizedBox(width: 5),
+              Text(
                 item.status.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTypography.supporting.copyWith(
-                  color: AppColors.textPrimary,
+                style: AppTypography.microLabel.copyWith(
+                  color: AppColors.textSecondary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-            ),
-            Text(
-              '${item.count}',
-              style: AppTypography.bodyStrong.copyWith(
-                fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+              const SizedBox(width: 5),
+              Text(
+                '${item.count}',
+                style: AppTypography.bodyStrong.copyWith(
+                  color: AppColors.textPrimary,
+                  fontFeatures: const <FontFeature>[
+                    FontFeature.tabularFigures(),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _AttentionTriageArea extends StatelessWidget {
-  const _AttentionTriageArea({
-    required this.inset,
+class _UnifiedAttentionSection extends StatelessWidget {
+  const _UnifiedAttentionSection({
     required this.totalStudents,
     required this.isBeforeCutoff,
     required this.undetectedStudents,
@@ -402,7 +376,6 @@ class _AttentionTriageArea extends StatelessWidget {
     this.onOpenStudentList,
   });
 
-  final double inset;
   final int totalStudents;
   final bool isBeforeCutoff;
   final List<StudentAttendanceRecord> undetectedStudents;
@@ -412,304 +385,221 @@ class _AttentionTriageArea extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isWideContainer = MediaQuery.sizeOf(context).width >= 820;
-    final horizontalPad = isWideContainer ? 0.0 : inset;
     final totalAttention = undetectedStudents.length + lateStudents.length;
 
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: horizontalPad),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          SizedBox(
-            width: double.infinity,
-            child: Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: AppSpacing.space2,
-              children: <Widget>[
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Flexible(
-                      child: Text(
-                        'ต้องติดตามวันนี้',
-                        style: AppTypography.sectionTitle,
-                      ),
-                    ),
-                    if (totalAttention > 0) ...<Widget>[
-                      const SizedBox(width: AppSpacing.space2),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 7,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceSubtle,
-                          borderRadius: BorderRadius.circular(AppRadius.badge),
-                        ),
-                        child: Text(
-                          '$totalAttention คน',
-                          style: AppTypography.microLabel.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                if (onOpenStudentList != null)
-                  TextButton(
-                    onPressed: () => onOpenStudentList!(null),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.space2,
-                      ),
-                      minimumSize: const Size(0, 40),
-                    ),
-                    child: Text('รายชื่อทั้งหมด ($totalStudents) →'),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.space2),
-
-          if (totalAttention == 0)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(AppSpacing.space4),
-              decoration: BoxDecoration(
-                color: AppColors.presentBackground,
-                borderRadius: BorderRadius.circular(AppRadius.panel),
-              ),
-              child: Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        // Unified section header: "ต้องติดตามวันนี้" + "5 คน" + "ดูรายชื่อทั้งหมด →"
+        SizedBox(
+          width: double.infinity,
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: AppSpacing.space2,
+            runSpacing: 4,
+            children: <Widget>[
+              Row(
+                mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  const Icon(
-                    Icons.check_circle_outline,
-                    size: 18,
-                    color: AppColors.presentForeground,
+                  Flexible(
+                    child: Text(
+                      'ต้องติดตามวันนี้',
+                      style: AppTypography.sectionTitle,
+                    ),
                   ),
                   const SizedBox(width: AppSpacing.space2),
-                  Expanded(
-                    child: Text(
-                      'นักเรียนทั้ง $totalStudents คนมีสถานะเรียบร้อยแล้ว',
-                      style: AppTypography.supporting.copyWith(
-                        color: AppColors.presentForeground,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  Text(
+                    '$totalAttention คน',
+                    style: AppTypography.supporting.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
               ),
-            )
-          else ...<Widget>[
-            // Stream 1: Not yet detected / Absent / Sync unknown
-            if (undetectedStudents.isNotEmpty)
-              _TriageStreamGroup(
-                title: isBeforeCutoff
-                    ? 'ยังไม่พบการสแกน (${undetectedStudents.length})'
-                    : 'ไม่พบการเข้าเรียน / ตรวจสอบ (${undetectedStudents.length})',
-                accentColor: isBeforeCutoff
-                    ? AppColors.pendingForeground
-                    : AppColors.absentForeground,
-                icon: isBeforeCutoff
-                    ? Icons.hourglass_empty_outlined
-                    : Icons.person_off_outlined,
-                students: undetectedStudents,
-                maxVisible: 2,
-                subtitleBuilder: (student) =>
-                    switch (student.todayEntry.status) {
-                      AttendanceStatus.pending => 'รอยืนยัน',
-                      AttendanceStatus.absent => 'ไม่พบใบลา',
-                      AttendanceStatus.unknown => 'รอซิงก์',
-                      _ => student.todayEntry.status.label,
-                    },
-                onTapStudent: onTapStudent,
-                onViewMore:
-                    undetectedStudents.length > 2 && onOpenStudentList != null
-                    ? () => onOpenStudentList!(
-                        undetectedStudents.first.todayEntry.status,
-                      )
-                    : null,
-              ),
+              if (onOpenStudentList != null)
+                TextButton(
+                  onPressed: () => onOpenStudentList!(null),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    minimumSize: const Size(0, 36),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text('ดูรายชื่อทั้งหมด →'),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.space3),
 
-            if (undetectedStudents.isNotEmpty && lateStudents.isNotEmpty)
-              const SizedBox(height: AppSpacing.space3),
-
-            // Stream 2: Late arrivals (distinct from unscanned)
-            if (lateStudents.isNotEmpty)
-              _TriageStreamGroup(
-                title: 'มาสายวันนี้ (${lateStudents.length})',
-                accentColor: AppColors.lateForeground,
-                icon: Icons.schedule_outlined,
-                students: lateStudents,
-                maxVisible: 2,
-                subtitleBuilder: (student) =>
-                    student.todayEntry.firstScanAt != null
-                    ? 'เข้า ${ThaiFormat.time24(student.todayEntry.firstScanAt!)}'
-                    : 'มาสาย',
-                onTapStudent: onTapStudent,
-                onViewMore: lateStudents.length > 2 && onOpenStudentList != null
-                    ? () => onOpenStudentList!(AttendanceStatus.late)
-                    : null,
-              ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _TriageStreamGroup extends StatelessWidget {
-  const _TriageStreamGroup({
-    required this.title,
-    required this.accentColor,
-    required this.icon,
-    required this.students,
-    required this.maxVisible,
-    required this.subtitleBuilder,
-    this.onTapStudent,
-    this.onViewMore,
-  });
-
-  final String title;
-  final Color accentColor;
-  final IconData icon;
-  final List<StudentAttendanceRecord> students;
-  final int maxVisible;
-  final String Function(StudentAttendanceRecord) subtitleBuilder;
-  final ValueChanged<StudentAttendanceRecord>? onTapStudent;
-  final VoidCallback? onViewMore;
-
-  @override
-  Widget build(BuildContext context) {
-    final visible = students.take(maxVisible).toList();
-    final remaining = students.length - visible.length;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.panel),
-        border: Border.all(color: AppColors.borderSubtle),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.space3,
-              vertical: 7,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceSubtle.withValues(alpha: 0.6),
-              border: Border(
-                left: BorderSide(color: accentColor, width: 3),
-                bottom: const BorderSide(color: AppColors.borderSubtle),
-              ),
-            ),
+        if (totalAttention == 0)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.space3),
             child: Row(
               children: <Widget>[
-                Icon(icon, size: 14, color: accentColor),
-                const SizedBox(width: 6),
+                const Icon(
+                  Icons.check_circle_outline,
+                  size: 18,
+                  color: AppColors.presentForeground,
+                ),
+                const SizedBox(width: AppSpacing.space2),
                 Expanded(
                   child: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.microLabel.copyWith(
-                      color: AppColors.textPrimary,
+                    'นักเรียนทั้ง $totalStudents คนมีสถานะเรียบร้อยแล้ว',
+                    style: AppTypography.supporting.copyWith(
+                      color: AppColors.presentForeground,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
               ],
             ),
-          ),
-          for (var i = 0; i < visible.length; i++) ...<Widget>[
-            InkWell(
-              onTap: onTapStudent != null
-                  ? () => onTapStudent!(visible[i])
-                  : null,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  minHeight: AppSpacing.minTouchTarget,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.space3,
-                    vertical: 9,
-                  ),
-                  child: Row(
-                    children: <Widget>[
-                      Container(
-                        width: 7,
-                        height: 7,
-                        decoration: BoxDecoration(
-                          color: visible[i].todayEntry.status.foregroundColor,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.space2),
-                      Expanded(
-                        child: Text(
-                          visible[i].fullName,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.bodyStrong,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.space2),
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 112),
-                        child: Text(
-                          subtitleBuilder(visible[i]),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.end,
-                          style: AppTypography.microLabel.copyWith(
-                            color: accentColor,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(
-                        Icons.chevron_right,
-                        size: 16,
-                        color: AppColors.textDisabled,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+          )
+        else ...<Widget>[
+          // GROUP A: "ยังไม่พบการสแกน" — N คน
+          if (undetectedStudents.isNotEmpty) ...<Widget>[
+            _AttentionGroupHeader(
+              label: isBeforeCutoff
+                  ? 'ยังไม่พบการสแกน — ${undetectedStudents.length} คน'
+                  : 'ไม่พบการเข้าเรียน — ${undetectedStudents.length} คน',
+              color: isBeforeCutoff
+                  ? AppColors.pendingForeground
+                  : AppColors.absentForeground,
             ),
-            if (i < visible.length - 1 || remaining > 0) const Divider(),
+            const SizedBox(height: AppSpacing.space1),
+            const Divider(),
+            for (var i = 0; i < undetectedStudents.length; i++) ...<Widget>[
+              _AttentionStudentRow(
+                student: undetectedStudents[i],
+                onTap: onTapStudent != null
+                    ? () => onTapStudent!(undetectedStudents[i])
+                    : null,
+              ),
+              const Divider(),
+            ],
           ],
-          if (remaining > 0 && onViewMore != null)
-            InkWell(
-              onTap: onViewMore,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.space3,
-                  vertical: 8,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+
+          if (undetectedStudents.isNotEmpty && lateStudents.isNotEmpty)
+            const SizedBox(height: AppSpacing.space4),
+
+          // GROUP B: "มาสายวันนี้" — N คน
+          if (lateStudents.isNotEmpty) ...<Widget>[
+            _AttentionGroupHeader(
+              label: 'มาสายวันนี้ — ${lateStudents.length} คน',
+              color: AppColors.lateForeground,
+            ),
+            const SizedBox(height: AppSpacing.space1),
+            const Divider(),
+            for (var i = 0; i < lateStudents.length; i++) ...<Widget>[
+              _AttentionStudentRow(
+                student: lateStudents[i],
+                onTap: onTapStudent != null
+                    ? () => onTapStudent!(lateStudents[i])
+                    : null,
+              ),
+              const Divider(),
+            ],
+          ],
+        ],
+      ],
+    );
+  }
+}
+
+class _AttentionGroupHeader extends StatelessWidget {
+  const _AttentionGroupHeader({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            label,
+            style: AppTypography.microLabel.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AttentionStudentRow extends StatelessWidget {
+  const _AttentionStudentRow({required this.student, this.onTap});
+
+  final StudentAttendanceRecord student;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final entry = student.todayEntry;
+    final scanTime = entry.firstScanAt != null
+        ? ThaiFormat.time24(entry.firstScanAt!)
+        : null;
+
+    return InkWell(
+      onTap: onTap,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 46),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     Text(
-                      'ดูอีก $remaining คนในรายชื่อ →',
-                      style: AppTypography.microLabel.copyWith(
-                        color: AppColors.brandPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      student.fullName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.bodyStrong,
+                    ),
+                    Text(
+                      'รหัส ${ThaiFormat.maskStudentId(student.studentId)}',
+                      style: AppTypography.microLabel,
                     ),
                   ],
                 ),
               ),
-            ),
-        ],
+              const SizedBox(width: AppSpacing.space2),
+              if (scanTime != null) ...<Widget>[
+                Text(
+                  scanTime,
+                  style: AppTypography.supporting.copyWith(
+                    color: AppColors.lateForeground,
+                    fontWeight: FontWeight.w600,
+                    fontFeatures: const <FontFeature>[
+                      FontFeature.tabularFigures(),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.space2),
+              ],
+              AttendanceStatusChip(status: entry.status, compact: true),
+              const SizedBox(width: 4),
+              const Icon(
+                Icons.chevron_right,
+                size: 18,
+                color: AppColors.textDisabled,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
