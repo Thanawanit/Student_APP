@@ -42,12 +42,12 @@ class RoleSelectionScreen extends StatelessWidget {
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: <Color>[
-                              Color(0xFFD9EBDF),
-                              Color(0xFFE6F2EA),
-                              Color(0xFFF0F6F2),
+                              Color(0xFF8FC7A6),
+                              Color(0xFFB4DAC3),
+                              Color(0xFFDCEEE3),
                               Color(0xFFF2F5F3),
                             ],
-                            stops: <double>[0.0, 0.4, 0.8, 1.0],
+                            stops: <double>[0.0, 0.4, 0.78, 1.0],
                           ),
                         ),
                         child: SafeArea(
@@ -84,31 +84,6 @@ class RoleSelectionScreen extends StatelessWidget {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: <Widget>[
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 3,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: const Color(
-                                            0xFF14532D,
-                                          ).withValues(alpha: 0.08),
-                                          borderRadius: BorderRadius.circular(
-                                            99,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          'ATTENDANCE SYSTEM',
-                                          style: AppTypography.microLabel
-                                              .copyWith(
-                                                color: const Color(0xFF166534),
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.w700,
-                                                letterSpacing: 0.8,
-                                              ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 6),
                                       Text(
                                         'โรงเรียนขุนยวมวิทยา',
                                         style: AppTypography.pageTitle.copyWith(
