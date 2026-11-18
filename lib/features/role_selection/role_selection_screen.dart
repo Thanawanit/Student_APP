@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_tokens.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../../shared/widgets/school_brand_mark.dart';
-import '../../shared/widgets/state_views.dart';
 import '../auth/parent_entry_screen.dart';
 import '../auth/teacher_login_screen.dart';
 
-/// Screen A — Light Editorial Role Selection (Apple Health / Linear inspired).
+/// Landing / Role Selection Screen (`โรงเรียนขุนยวมวิทยา`) with Green-White
+/// gradient header, separate elevated role cards, structured attendance
+/// criteria card, and centered sample data pill.
 class RoleSelectionScreen extends StatelessWidget {
   const RoleSelectionScreen({super.key});
 
@@ -17,49 +17,117 @@ class RoleSelectionScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final inset = ResponsiveContent.horizontalInset(context);
 
-    return Scaffold(
-      body: SafeArea(
-        child: LayoutBuilder(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF2F5F3),
+        body: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        // Clean Light Editorial Masthead
-                        Container(
-                          width: double.infinity,
-                          color: AppColors.surface,
-                          padding: EdgeInsets.fromLTRB(
-                            inset,
-                            AppSpacing.space5,
-                            inset,
-                            AppSpacing.space4,
+                child: IntrinsicHeight(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      // 1. Top Header Container (Green-to-White Gradient)
+                      Container(
+                        width: double.infinity,
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: <Color>[
+                              Color(0xFF14532D),
+                              Color(0xFF15803D),
+                              Color(0xFFDCFCE7),
+                              Color(0xFFF2F5F3),
+                            ],
+                            stops: <double>[0.0, 0.45, 0.82, 1.0],
                           ),
+                        ),
+                        child: SafeArea(
+                          bottom: false,
                           child: ResponsiveContent(
-                            padding: EdgeInsets.zero,
+                            padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
                             child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: <Widget>[
-                                const SchoolLogoMark(size: 46),
-                                const SizedBox(width: AppSpacing.space3),
+                                Container(
+                                  width: 60,
+                                  height: 60,
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: <BoxShadow>[
+                                      BoxShadow(
+                                        color: Colors.black.withValues(
+                                          alpha: 0.12,
+                                        ),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Center(
+                                    child: SchoolLogoMark(size: 52),
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: <Widget>[
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 3,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.18,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            99,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'ATTENDANCE SYSTEM',
+                                          style: AppTypography.microLabel
+                                              .copyWith(
+                                                color: Colors.white,
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w700,
+                                                letterSpacing: 0.8,
+                                              ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
                                       Text(
                                         'โรงเรียนขุนยวมวิทยา',
-                                        style: AppTypography.pageTitle,
+                                        style: AppTypography.pageTitle.copyWith(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.w800,
+                                          color: Colors.white,
+                                        ),
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        'Attendance App • ระบบติดตามการเข้าเรียนรายวัน',
-                                        style: AppTypography.supporting,
+                                        'ระบบติดตามการเข้าเรียนรายวัน',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: AppTypography.supporting
+                                            .copyWith(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w500,
+                                              color: const Color(0xFFECFDF5),
+                                            ),
                                       ),
                                     ],
                                   ),
@@ -68,41 +136,74 @@ class RoleSelectionScreen extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const Divider(),
+                      ),
 
-                        const SizedBox(height: AppSpacing.space5),
-
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: inset),
-                          child: ResponsiveContent(
-                            padding: EdgeInsets.zero,
-                            child: Text(
-                              'เลือกประเภทผู้ใช้งาน',
-                              style: AppTypography.microLabel.copyWith(
-                                fontWeight: FontWeight.w600,
+                      // 2. Role Selection Cards & 3. Attendance Criteria Card
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: inset),
+                        child: ResponsiveContent(
+                          padding: EdgeInsets.zero,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                'เลือกประเภทผู้ใช้งาน',
+                                style: AppTypography.sectionTitle.copyWith(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF334155),
+                                ),
                               ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.space2),
+                              const SizedBox(height: 12),
 
-                        // Full-width hairline-separated role list
-                        Container(
-                          width: double.infinity,
-                          decoration: const BoxDecoration(
-                            color: AppColors.surface,
-                            border: Border(
-                              top: BorderSide(color: AppColors.borderSubtle),
-                              bottom: BorderSide(color: AppColors.borderSubtle),
-                            ),
-                          ),
-                          child: ResponsiveContent(
-                            padding: EdgeInsets.zero,
-                            child: LayoutBuilder(
-                              builder: (context, box) {
-                                final teacherRow = _RoleRow(
-                                  inset: inset,
+                              if (constraints.maxWidth >= 720)
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Expanded(
+                                      child: _ElevatedRoleCard(
+                                        icon: Icons.school_outlined,
+                                        iconBg: const Color(0xFFDCFCE7),
+                                        iconColor: const Color(0xFF15803D),
+                                        title: 'เข้าสู่ระบบคุณครู',
+                                        description:
+                                            'ดูภาพรวมการเข้าเรียนรายห้อง รายชื่อนักเรียน ประวัติย้อนหลัง และแก้ไขสถานะ',
+                                        onTap: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute<void>(
+                                              builder: (_) =>
+                                                  const TeacherLoginScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: _ElevatedRoleCard(
+                                        icon: Icons.person_outline,
+                                        iconBg: const Color(0xFFE0F2FE),
+                                        iconColor: const Color(0xFF0369A1),
+                                        title: 'เข้าสู่ระบบผู้ปกครอง',
+                                        description:
+                                            'ตรวจสอบสถานะวันนี้ เวลาสแกนเข้า สรุปรายสัปดาห์ และประวัติย้อนหลัง',
+                                        onTap: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute<void>(
+                                              builder: (_) =>
+                                                  const ParentEntryScreen(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              else ...<Widget>[
+                                _ElevatedRoleCard(
                                   icon: Icons.school_outlined,
+                                  iconBg: const Color(0xFFDCFCE7),
+                                  iconColor: const Color(0xFF15803D),
                                   title: 'เข้าสู่ระบบคุณครู',
                                   description:
                                       'ดูภาพรวมการเข้าเรียนรายห้อง รายชื่อนักเรียน ประวัติย้อนหลัง และแก้ไขสถานะ',
@@ -114,10 +215,11 @@ class RoleSelectionScreen extends StatelessWidget {
                                       ),
                                     );
                                   },
-                                );
-                                final parentRow = _RoleRow(
-                                  inset: inset,
+                                ),
+                                _ElevatedRoleCard(
                                   icon: Icons.person_outline,
+                                  iconBg: const Color(0xFFE0F2FE),
+                                  iconColor: const Color(0xFF0369A1),
                                   title: 'เข้าสู่ระบบผู้ปกครอง',
                                   description:
                                       'ตรวจสอบสถานะวันนี้ เวลาสแกนเข้า สรุปรายสัปดาห์ และประวัติย้อนหลัง',
@@ -129,77 +231,123 @@ class RoleSelectionScreen extends StatelessWidget {
                                       ),
                                     );
                                   },
-                                );
-
-                                if (box.maxWidth >= 680) {
-                                  return IntrinsicHeight(
-                                    child: Row(
-                                      children: <Widget>[
-                                        Expanded(child: teacherRow),
-                                        const VerticalDivider(
-                                          width: 1,
-                                          thickness: 1,
-                                          color: AppColors.borderSubtle,
-                                        ),
-                                        Expanded(child: parentRow),
-                                      ],
-                                    ),
-                                  );
-                                }
-
-                                return Column(
-                                  children: <Widget>[
-                                    teacherRow,
-                                    Divider(indent: inset, endIndent: inset),
-                                    parentRow,
-                                  ],
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: AppSpacing.space4),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: inset),
-                          child: ResponsiveContent(
-                            padding: EdgeInsets.zero,
-                            child: Wrap(
-                              spacing: AppSpacing.space4,
-                              runSpacing: AppSpacing.space1,
-                              children: const <Widget>[
-                                _RuleLegend(
-                                  color: AppColors.presentForeground,
-                                  text: 'ก่อน 08:00 มาเรียน',
-                                ),
-                                _RuleLegend(
-                                  color: AppColors.lateForeground,
-                                  text: '08:00+ มาสาย',
-                                ),
-                                _RuleLegend(
-                                  color: AppColors.pendingForeground,
-                                  text: 'ตัดรอบขาดเรียน 09:00 น.',
                                 ),
                               ],
+
+                              const SizedBox(height: 4),
+
+                              // 3. Structured Attendance Criteria Card
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: const Color(
+                                    0xFFFFFFFF,
+                                  ).withValues(alpha: 0.85),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: const Color(0xFFE2E8E4),
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: <Widget>[
+                                        const Icon(
+                                          Icons.access_time_rounded,
+                                          size: 15,
+                                          color: Color(0xFF64748B),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Flexible(
+                                          child: Text(
+                                            'เกณฑ์เวลาบันทึกสถานะ',
+                                            style: AppTypography.microLabel
+                                                .copyWith(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: const Color(
+                                                    0xFF475569,
+                                                  ),
+                                                ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    const Wrap(
+                                      spacing: 14,
+                                      runSpacing: 6,
+                                      children: <Widget>[
+                                        _RuleDotItem(
+                                          color: Color(0xFF16A34A),
+                                          text: 'ก่อน 08:00\u00A0น. มาเรียน',
+                                        ),
+                                        _RuleDotItem(
+                                          color: Color(0xFFD97706),
+                                          text: 'หลัง 08:00\u00A0น. มาสาย',
+                                        ),
+                                        _RuleDotItem(
+                                          color: Color(0xFF64748B),
+                                          text: 'ตัดรอบขาดเรียน 09:00\u00A0น.',
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const Spacer(),
+
+                      // 4. Centered Footer Sample Data Pill
+                      SafeArea(
+                        top: false,
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(inset, 24, inset, 16),
+                          child: Align(
+                            alignment: Alignment.center,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 7,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE2E8E4),
+                                borderRadius: BorderRadius.circular(99),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  const Icon(
+                                    Icons.science_outlined,
+                                    size: 14,
+                                    color: Color(0xFF475569),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Flexible(
+                                    child: Text(
+                                      'โหมดตัวอย่าง (Sample Data)',
+                                      style: AppTypography.microLabel.copyWith(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: const Color(0xFF475569),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ],
-                    ),
-
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        inset,
-                        AppSpacing.space6,
-                        inset,
-                        AppSpacing.space4,
                       ),
-                      child: const ResponsiveContent(
-                        padding: EdgeInsets.zero,
-                        child: PrototypeSampleNotice(),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             );
@@ -210,8 +358,107 @@ class RoleSelectionScreen extends StatelessWidget {
   }
 }
 
-class _RuleLegend extends StatelessWidget {
-  const _RuleLegend({required this.color, required this.text});
+class _ElevatedRoleCard extends StatelessWidget {
+  const _ElevatedRoleCard({
+    required this.icon,
+    required this.iconBg,
+    required this.iconColor,
+    required this.title,
+    required this.description,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final Color iconBg;
+  final Color iconColor;
+  final String title;
+  final String description;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFFFF),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE2E8E4), width: 1),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(18),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: <Widget>[
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: iconBg,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(icon, color: iconColor, size: 22),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        title,
+                        style: AppTypography.sectionTitle.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        description,
+                        style: AppTypography.supporting.copyWith(
+                          fontSize: 12.5,
+                          color: const Color(0xFF64748B),
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF8FAFC),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 14,
+                    color: Color(0xFF475569),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RuleDotItem extends StatelessWidget {
+  const _RuleDotItem({required this.color, required this.text});
 
   final Color color;
   final String text;
@@ -222,75 +469,21 @@ class _RuleLegend extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         Container(
-          width: 6,
-          height: 6,
+          width: 7,
+          height: 7,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 6),
-        Flexible(child: Text(text, style: AppTypography.microLabel)),
-      ],
-    );
-  }
-}
-
-class _RoleRow extends StatelessWidget {
-  const _RoleRow({
-    required this.inset,
-    required this.icon,
-    required this.title,
-    required this.description,
-    required this.onTap,
-  });
-
-  final double inset;
-  final IconData icon;
-  final String title;
-  final String description;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 84),
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: inset,
-            vertical: AppSpacing.space4,
-          ),
-          child: Row(
-            children: <Widget>[
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.brandPrimarySoft,
-                  borderRadius: BorderRadius.circular(AppRadius.control),
-                ),
-                child: Icon(icon, color: AppColors.brandPrimary, size: 20),
-              ),
-              const SizedBox(width: AppSpacing.space3),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(title, style: AppTypography.sectionTitle),
-                    const SizedBox(height: 2),
-                    Text(description, style: AppTypography.supporting),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.space2),
-              const Icon(
-                Icons.chevron_right,
-                size: 20,
-                color: AppColors.textSecondary,
-              ),
-            ],
+        Flexible(
+          child: Text(
+            text,
+            style: AppTypography.microLabel.copyWith(
+              color: const Color(0xFF475569),
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 }
