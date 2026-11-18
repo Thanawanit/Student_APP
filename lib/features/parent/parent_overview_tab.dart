@@ -11,13 +11,9 @@ import '../../shared/widgets/school_brand_mark.dart';
 import '../../shared/widgets/state_views.dart';
 import '../../state/app_controller.dart';
 
-/// Parent Dashboard Overview — Light Editorial × Swiss Data Design.
-/// Replaces nested Bento cards and separate day boxes with:
-/// 1) Compact student header
-/// 2) Clean highlighted today's attendance section
-/// 3) Single connected Monday–Friday weekly timeline + inline summary row
-/// 4) Compact Activity Feed notification row
-/// 5) Simple editorial navigation row to Attendance History
+/// Student/Parent Overview Screen with soft greenish-gray canvas (#F2F5F3),
+/// White Hero Status Card, Weekly Attendance Card with 5 day pills, and
+/// separate White Action Cards at the bottom.
 class ParentOverviewTab extends StatelessWidget {
   const ParentOverviewTab({
     super.key,
@@ -40,7 +36,7 @@ class ParentOverviewTab extends StatelessWidget {
     final inset = ResponsiveContent.horizontalInset(context);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: const Color(0xFFF2F5F3),
       body: Column(
         children: <Widget>[
           _StudentHeader(
@@ -51,8 +47,6 @@ class ParentOverviewTab extends StatelessWidget {
                 : session != null
                 ? 'ม.${session.classroom.grade} · ${session.classroom.roomLabel} · รหัส ${ThaiFormat.maskStudentId(session.studentId)}'
                 : 'โรงเรียนขุนยวมวิทยา',
-            unreadCount: unread,
-            onOpenNotifications: onOpenNotifications,
           ),
           Expanded(
             child: RefreshIndicator(
@@ -80,31 +74,25 @@ class ParentOverviewTab extends StatelessWidget {
                             builder: (context, constraints) {
                               final isWideDesktop = constraints.maxWidth >= 840;
 
-                              final todaySection = _TodayHighlightedSection(
+                              final heroStatusCard = _HeroStatusCard(
                                 entry: record.todayEntry,
                               );
 
-                              final weeklySection = _WeeklyConnectedTimeline(
+                              final weeklyCard = _WeeklyAttendanceCard(
                                 record: record,
                                 todayDate: controller.todayDate,
                               );
 
-                              final feedAndHistorySection = Column(
+                              final bottomActionCards = Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
-                                  const Divider(),
-                                  if (latestNotification != null) ...<Widget>[
-                                    _NotificationActivityRow(
+                                  if (latestNotification != null)
+                                    _NotificationActionCard(
                                       notification: latestNotification,
                                       unreadCount: unread,
                                       onTap: onOpenNotifications,
                                     ),
-                                    const Divider(),
-                                  ],
-                                  _HistoryEditorialRow(
-                                    onTap: onOpenFullHistory,
-                                  ),
-                                  const Divider(),
+                                  _HistoryActionCard(onTap: onOpenFullHistory),
                                 ],
                               );
 
@@ -113,33 +101,25 @@ class ParentOverviewTab extends StatelessWidget {
                                   padding: EdgeInsets.symmetric(
                                     horizontal: inset,
                                   ),
-                                  child: IntrinsicHeight(
-                                    child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: <Widget>[
-                                        Expanded(
-                                          flex: 5,
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: <Widget>[
-                                              todaySection,
-                                              const SizedBox(
-                                                height: AppSpacing.space6,
-                                              ),
-                                              feedAndHistorySection,
-                                            ],
-                                          ),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Expanded(
+                                        flex: 5,
+                                        child: Column(
+                                          children: <Widget>[
+                                            heroStatusCard,
+                                            const SizedBox(
+                                              height: AppSpacing.space4,
+                                            ),
+                                            bottomActionCards,
+                                          ],
                                         ),
-                                        const VerticalDivider(
-                                          width: AppSpacing.space8,
-                                          thickness: 1,
-                                          color: AppColors.borderSubtle,
-                                        ),
-                                        Expanded(flex: 7, child: weeklySection),
-                                      ],
-                                    ),
+                                      ),
+                                      const SizedBox(width: AppSpacing.space5),
+                                      Expanded(flex: 7, child: weeklyCard),
+                                    ],
                                   ),
                                 );
                               }
@@ -151,11 +131,11 @@ class ParentOverviewTab extends StatelessWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: <Widget>[
-                                    todaySection,
-                                    const SizedBox(height: AppSpacing.space6),
-                                    weeklySection,
-                                    const SizedBox(height: AppSpacing.space5),
-                                    feedAndHistorySection,
+                                    heroStatusCard,
+                                    const SizedBox(height: AppSpacing.space4),
+                                    weeklyCard,
+                                    const SizedBox(height: AppSpacing.space4),
+                                    bottomActionCards,
                                   ],
                                 ),
                               );
@@ -177,36 +157,32 @@ class _StudentHeader extends StatelessWidget {
     required this.inset,
     required this.studentName,
     required this.subtitle,
-    required this.unreadCount,
-    required this.onOpenNotifications,
   });
 
   final double inset;
   final String studentName;
   final String subtitle;
-  final int unreadCount;
-  final VoidCallback onOpenNotifications;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
-        color: AppColors.background,
-        border: Border(bottom: BorderSide(color: AppColors.borderSubtle)),
+        color: Color(0xFFFFFFFF),
+        border: Border(bottom: BorderSide(color: Color(0xFFE2E8E4))),
       ),
       child: SafeArea(
         bottom: false,
         child: ResponsiveContent(
           padding: EdgeInsets.fromLTRB(
             inset,
-            AppSpacing.space2,
-            AppSpacing.space2,
-            AppSpacing.space2,
+            AppSpacing.space3,
+            inset,
+            AppSpacing.space3,
           ),
           child: Row(
             children: <Widget>[
-              const SchoolLogoMark(size: 28),
+              const SchoolLogoMark(size: 30),
               const SizedBox(width: AppSpacing.space3),
               Expanded(
                 child: Column(
@@ -230,16 +206,6 @@ class _StudentHeader extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton(
-                tooltip: 'การแจ้งเตือน',
-                onPressed: onOpenNotifications,
-                icon: Badge.count(
-                  count: unreadCount,
-                  isLabelVisible: unreadCount > 0,
-                  backgroundColor: AppColors.brandPrimary,
-                  child: const Icon(Icons.notifications_outlined),
-                ),
-              ),
             ],
           ),
         ),
@@ -248,95 +214,141 @@ class _StudentHeader extends StatelessWidget {
   }
 }
 
-class _TodayHighlightedSection extends StatelessWidget {
-  const _TodayHighlightedSection({required this.entry});
+class _HeroStatusCard extends StatelessWidget {
+  const _HeroStatusCard({required this.entry});
 
   final DailyAttendanceEntry entry;
 
   @override
   Widget build(BuildContext context) {
-    final String statusHeadline = switch (entry.status) {
+    final isPending = entry.status == AttendanceStatus.pending;
+
+    final Color iconCircleBg = isPending
+        ? const Color(0xFFF1F5F9)
+        : entry.status.backgroundColor;
+    final Color iconCircleFg = isPending
+        ? const Color(0xFF475569)
+        : entry.status.foregroundColor;
+
+    final Color pillBg = isPending
+        ? const Color(0xFFF1F5F9)
+        : entry.status.backgroundColor;
+    final Color pillFg = isPending
+        ? const Color(0xFF475569)
+        : entry.status.foregroundColor;
+
+    final String titleText = switch (entry.status) {
+      AttendanceStatus.pending => 'รอสแกนเข้าเรียน',
       AttendanceStatus.present => 'มาเรียน · ตรงเวลา',
       AttendanceStatus.late => 'มาสาย',
       AttendanceStatus.absent => 'ขาดเรียนวันนี้',
       AttendanceStatus.leave => 'บันทึกการลาแล้ว',
-      AttendanceStatus.pending => 'รอยืนยัน',
-      AttendanceStatus.unknown => 'ตรวจสอบข้อมูล',
+      AttendanceStatus.unknown => 'อยู่ระหว่างตรวจสอบข้อมูล',
     };
 
-    final String arrivalDisplay = switch (entry.status) {
-      AttendanceStatus.present || AttendanceStatus.late =>
-        entry.firstScanAt != null ? ThaiFormat.time24(entry.firstScanAt!) : '—',
-      AttendanceStatus.pending => 'รอสแกน',
-      AttendanceStatus.leave => 'วันลา',
-      AttendanceStatus.absent => 'ไม่พบสแกน',
-      AttendanceStatus.unknown => 'รอซิงก์',
+    final String subtitleText = switch (entry.status) {
+      AttendanceStatus.pending =>
+        'ยังไม่พบการสแกน • รอยืนยันสถานะถึง 09:00\u00A0น.',
+      AttendanceStatus.present => 'บันทึกการมาเรียนก่อนเวลา 08:00\u00A0น.',
+      AttendanceStatus.late =>
+        'บันทึกการเข้าเรียนตั้งแต่เวลา 08:00\u00A0น. เป็นต้นไป',
+      AttendanceStatus.absent =>
+        'ไม่พบการสแกนและไม่มีบันทึกการลาหลังเวลา 09:00\u00A0น.',
+      AttendanceStatus.leave => 'มีการบันทึกสถานะลาเรียบร้อยแล้ว',
+      AttendanceStatus.unknown =>
+        'ข้อมูลยังไม่ล่าสุดหรืออยู่ระหว่างตรวจสอบ กรุณารอการซิงก์',
     };
+
+    final scanTimeText = entry.firstScanAt != null
+        ? ThaiFormat.time24Nbsp(entry.firstScanAt!)
+        : null;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.space4,
-        AppSpacing.space3,
-        AppSpacing.space4,
-        AppSpacing.space3,
-      ),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: entry.status.backgroundColor.withValues(alpha: 0.65),
-        border: Border(
-          left: BorderSide(color: entry.status.foregroundColor, width: 3),
-        ),
+        color: const Color(0xFFFFFFFF),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8E4), width: 1),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(
-            'สถานะวันนี้ · ${ThaiFormat.fullDate(entry.date)}',
-            style: AppTypography.microLabel.copyWith(
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: iconCircleBg,
+              shape: BoxShape.circle,
             ),
+            child: Icon(entry.status.icon, size: 22, color: iconCircleFg),
           ),
-          const SizedBox(height: AppSpacing.space2),
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: AppSpacing.space3,
-            runSpacing: 4,
-            children: <Widget>[
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Icon(
-                    entry.status.icon,
-                    size: 20,
-                    color: entry.status.foregroundColor,
-                  ),
-                  const SizedBox(width: AppSpacing.space2),
-                  Flexible(
-                    child: Text(
-                      statusHeadline,
-                      style: AppTypography.sectionTitle.copyWith(
-                        color: entry.status.foregroundColor,
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Wrap(
+                  spacing: AppSpacing.space2,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: <Widget>[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: pillBg,
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                      child: Text(
+                        entry.status.label,
+                        style: AppTypography.microLabel.copyWith(
+                          fontSize: 12,
+                          color: pillFg,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              Text(
-                arrivalDisplay,
-                style: AppTypography.display.copyWith(
-                  fontSize: entry.firstScanAt != null ? 30 : 20,
-                  color: AppColors.textPrimary,
+                    if (scanTimeText != null)
+                      Text(
+                        scanTimeText,
+                        style: AppTypography.supporting.copyWith(
+                          color: const Color(0xFF111827),
+                          fontWeight: FontWeight.w700,
+                          fontFeatures: const <FontFeature>[
+                            FontFeature.tabularFigures(),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            entry.status.detailDescription,
-            style: AppTypography.supporting.copyWith(
-              color: AppColors.textPrimary,
+                const SizedBox(height: 4),
+                Text(
+                  titleText,
+                  style: AppTypography.sectionTitle.copyWith(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF111827),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitleText,
+                  style: AppTypography.supporting.copyWith(
+                    fontSize: 13,
+                    color: const Color(0xFF6B7280),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -345,11 +357,8 @@ class _TodayHighlightedSection extends StatelessWidget {
   }
 }
 
-class _WeeklyConnectedTimeline extends StatelessWidget {
-  const _WeeklyConnectedTimeline({
-    required this.record,
-    required this.todayDate,
-  });
+class _WeeklyAttendanceCard extends StatelessWidget {
+  const _WeeklyAttendanceCard({required this.record, required this.todayDate});
 
   final StudentAttendanceRecord record;
   final DateTime todayDate;
@@ -376,66 +385,65 @@ class _WeeklyConnectedTimeline extends StatelessWidget {
     final monday = todayDate.subtract(Duration(days: todayDate.weekday - 1));
     const dayNames = <String>['จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.'];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        // Section header
-        SizedBox(
-          width: double.infinity,
-          child: Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: AppSpacing.space2,
-            children: <Widget>[
-              Text('การเข้าเรียนสัปดาห์นี้', style: AppTypography.sectionTitle),
-              Text(summary.weekLabel, style: AppTypography.microLabel),
-            ],
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFFFF),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8E4), width: 1),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
-        ),
-        const SizedBox(height: AppSpacing.space3),
-
-        // Single connected Monday–Friday timeline (no individual day boxes)
-        Container(
-          width: double.infinity,
-          decoration: const BoxDecoration(
-            border: Border(
-              top: BorderSide(color: AppColors.borderSubtle),
-              bottom: BorderSide(color: AppColors.borderSubtle),
-            ),
-          ),
-          child: IntrinsicHeight(
-            child: Row(
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          SizedBox(
+            width: double.infinity,
+            child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: AppSpacing.space2,
               children: <Widget>[
-                for (var d = 0; d < 5; d++) ...<Widget>[
-                  Expanded(
-                    child: _ConnectedDayColumn(
-                      dayName: dayNames[d],
-                      date: monday.add(Duration(days: d)),
-                      isToday:
-                          monday.add(Duration(days: d)).year ==
-                              todayDate.year &&
-                          monday.add(Duration(days: d)).month ==
-                              todayDate.month &&
-                          monday.add(Duration(days: d)).day == todayDate.day,
-                      entry: _entryForDay(monday.add(Duration(days: d))),
-                    ),
-                  ),
-                  if (d < 4)
-                    const VerticalDivider(
-                      width: 1,
-                      thickness: 1,
-                      color: AppColors.borderSubtle,
-                    ),
-                ],
+                Text(
+                  'การเข้าเรียนสัปดาห์นี้',
+                  style: AppTypography.sectionTitle,
+                ),
+                Text(summary.weekLabel, style: AppTypography.microLabel),
               ],
             ),
           ),
-        ),
-        const SizedBox(height: AppSpacing.space3),
+          const SizedBox(height: AppSpacing.space3),
 
-        // Compact weekly summary row: มาสาย 0 | ขาด 0 | ลา 0
-        IntrinsicHeight(
-          child: Wrap(
+          // 5 separate vertical pill boxes inside a Row with SizedBox(width: 8)
+          Row(
+            children: <Widget>[
+              for (var d = 0; d < 5; d++) ...<Widget>[
+                Expanded(
+                  child: _DayPillBox(
+                    dayName: dayNames[d],
+                    date: monday.add(Duration(days: d)),
+                    isActive:
+                        monday.add(Duration(days: d)).year == todayDate.year &&
+                        monday.add(Duration(days: d)).month ==
+                            todayDate.month &&
+                        monday.add(Duration(days: d)).day == todayDate.day,
+                    entry: _entryForDay(monday.add(Duration(days: d))),
+                  ),
+                ),
+                if (d < 4) const SizedBox(width: 8),
+              ],
+            ],
+          ),
+          const SizedBox(height: AppSpacing.space3),
+
+          // Compact weekly summary row inside the same card
+          Wrap(
             crossAxisAlignment: WrapCrossAlignment.center,
             spacing: AppSpacing.space3,
             runSpacing: 4,
@@ -445,13 +453,13 @@ class _WeeklyConnectedTimeline extends StatelessWidget {
                 count: summary.lateCount,
                 color: AttendanceStatus.late.foregroundColor,
               ),
-              const Text('|', style: TextStyle(color: AppColors.borderStrong)),
+              const Text('|', style: TextStyle(color: Color(0xFFE2E8E4))),
               _InlineSummaryMetric(
                 label: 'ขาด',
                 count: summary.absentCount,
                 color: AttendanceStatus.absent.foregroundColor,
               ),
-              const Text('|', style: TextStyle(color: AppColors.borderStrong)),
+              const Text('|', style: TextStyle(color: Color(0xFFE2E8E4))),
               _InlineSummaryMetric(
                 label: 'ลา',
                 count: summary.leaveCount,
@@ -459,23 +467,23 @@ class _WeeklyConnectedTimeline extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
-class _ConnectedDayColumn extends StatelessWidget {
-  const _ConnectedDayColumn({
+class _DayPillBox extends StatelessWidget {
+  const _DayPillBox({
     required this.dayName,
     required this.date,
-    required this.isToday,
+    required this.isActive,
     required this.entry,
   });
 
   final String dayName;
   final DateTime date;
-  final bool isToday;
+  final bool isActive;
   final DailyAttendanceEntry? entry;
 
   @override
@@ -500,17 +508,19 @@ class _ConnectedDayColumn extends StatelessWidget {
       detailText = '—';
     }
 
+    final Color fgColor = isActive
+        ? const Color(0xFF14532D)
+        : const Color(0xFF94A3B8);
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
       decoration: BoxDecoration(
-        color: isToday
-            ? AppColors.brandPrimarySoft.withValues(alpha: 0.5)
-            : Colors.transparent,
-        border: isToday
-            ? const Border(
-                bottom: BorderSide(color: AppColors.brandPrimary, width: 2),
-              )
-            : null,
+        color: isActive ? const Color(0xFFE8F5EE) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isActive ? const Color(0xFF16A34A) : const Color(0xFFE2E8F0),
+          width: isActive ? 1.5 : 1,
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -520,10 +530,8 @@ class _ConnectedDayColumn extends StatelessWidget {
             child: Text(
               '$dayName ${date.day}',
               style: AppTypography.microLabel.copyWith(
-                color: isToday
-                    ? AppColors.brandPrimary
-                    : AppColors.textSecondary,
-                fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
+                color: fgColor,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
           ),
@@ -531,9 +539,7 @@ class _ConnectedDayColumn extends StatelessWidget {
           Icon(
             status != null ? status.icon : Icons.remove,
             size: 16,
-            color: status != null
-                ? status.foregroundColor
-                : AppColors.textDisabled,
+            color: fgColor,
           ),
           const SizedBox(height: 4),
           FittedBox(
@@ -542,10 +548,8 @@ class _ConnectedDayColumn extends StatelessWidget {
               detailText,
               style: AppTypography.microLabel.copyWith(
                 fontSize: 11,
-                color: status != null
-                    ? AppColors.textPrimary
-                    : AppColors.textDisabled,
-                fontWeight: scanTime != null
+                color: fgColor,
+                fontWeight: isActive || scanTime != null
                     ? FontWeight.w600
                     : FontWeight.w500,
               ),
@@ -592,8 +596,8 @@ class _InlineSummaryMetric extends StatelessWidget {
   }
 }
 
-class _NotificationActivityRow extends StatelessWidget {
-  const _NotificationActivityRow({
+class _NotificationActionCard extends StatelessWidget {
+  const _NotificationActionCard({
     required this.notification,
     required this.unreadCount,
     required this.onTap,
@@ -605,69 +609,86 @@ class _NotificationActivityRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 52),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Row(
-            children: <Widget>[
-              Icon(
-                unreadCount > 0
-                    ? Icons.notifications_active_outlined
-                    : Icons.notifications_outlined,
-                size: 18,
-                color: unreadCount > 0
-                    ? AppColors.brandPrimary
-                    : AppColors.textSecondary,
-              ),
-              const SizedBox(width: AppSpacing.space3),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      notification.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.bodyStrong.copyWith(fontSize: 14),
-                    ),
-                    Text(
-                      '${ThaiFormat.shortDate(notification.targetDate)} · เปลี่ยนเป็น "${notification.newStatus.label}"',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.microLabel,
-                    ),
-                  ],
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFFFF),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE2E8E4), width: 1),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: <Widget>[
+                Icon(
+                  unreadCount > 0
+                      ? Icons.notifications_active_outlined
+                      : Icons.notifications_outlined,
+                  size: 20,
+                  color: unreadCount > 0
+                      ? const Color(0xFF14532D)
+                      : AppColors.textSecondary,
                 ),
-              ),
-              const SizedBox(width: AppSpacing.space2),
-              if (unreadCount > 0)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.brandPrimarySoft,
-                    borderRadius: BorderRadius.circular(AppRadius.badge),
-                  ),
-                  child: Text(
-                    '$unreadCount ใหม่',
-                    style: AppTypography.microLabel.copyWith(
-                      color: AppColors.brandPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                const SizedBox(width: AppSpacing.space3),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        notification.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.bodyStrong.copyWith(fontSize: 14),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${ThaiFormat.shortDate(notification.targetDate)} · เปลี่ยนเป็น "${notification.newStatus.label}"',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.microLabel,
+                      ),
+                    ],
                   ),
                 ),
-              const SizedBox(width: 4),
-              const Icon(
-                Icons.chevron_right,
-                size: 18,
-                color: AppColors.textSecondary,
-              ),
-            ],
+                const SizedBox(width: AppSpacing.space2),
+                if (unreadCount > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFDCECE2),
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                    child: Text(
+                      '$unreadCount ใหม่',
+                      style: AppTypography.microLabel.copyWith(
+                        color: const Color(0xFF14532D),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: AppColors.textSecondary,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -675,39 +696,55 @@ class _NotificationActivityRow extends StatelessWidget {
   }
 }
 
-class _HistoryEditorialRow extends StatelessWidget {
-  const _HistoryEditorialRow({required this.onTap});
+class _HistoryActionCard extends StatelessWidget {
+  const _HistoryActionCard({required this.onTap});
 
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 48),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Row(
-            children: <Widget>[
-              const Icon(
-                Icons.history_outlined,
-                size: 18,
-                color: AppColors.textSecondary,
-              ),
-              const SizedBox(width: AppSpacing.space3),
-              Expanded(
-                child: Text(
-                  'ดูประวัติการเข้าเรียนย้อนหลัง',
-                  style: AppTypography.bodyStrong.copyWith(fontSize: 14),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFFFF),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE2E8E4), width: 1),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: <Widget>[
+                const Icon(
+                  Icons.history_outlined,
+                  size: 20,
+                  color: AppColors.textSecondary,
                 ),
-              ),
-              const Icon(
-                Icons.chevron_right,
-                size: 18,
-                color: AppColors.textSecondary,
-              ),
-            ],
+                const SizedBox(width: AppSpacing.space3),
+                Expanded(
+                  child: Text(
+                    'ดูประวัติการเข้าเรียนย้อนหลัง',
+                    style: AppTypography.bodyStrong.copyWith(fontSize: 14),
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: AppColors.textSecondary,
+                ),
+              ],
+            ),
           ),
         ),
       ),

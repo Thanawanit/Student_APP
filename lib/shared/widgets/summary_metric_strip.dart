@@ -6,12 +6,11 @@ import '../../core/theme/app_typography.dart';
 import '../../core/utils/thai_date_format.dart';
 import '../../domain/models/attendance_models.dart';
 import '../../domain/models/attendance_status.dart';
-import 'status_chip.dart';
 
-/// Light Editorial × Swiss Data Design overview for Teacher Dashboard.
-/// Replaces Bento cards with open editorial sections, large tabular typography,
-/// one segmented progress bar, a 4-column inline distribution, and one unified
-/// attention list divided by thin horizontal hairlines.
+/// Teacher Overview content:
+/// 1) Single White Summary Card (with inline percentage pill, 2-color progress bar, and 4-item legend)
+/// 2) Student Follow-up List with individual White Cards, 2-letter Thai initials CircleAvatar,
+///    and stadium status pills.
 class ClassroomIntelligencePanel extends StatelessWidget {
   const ClassroomIntelligencePanel({
     super.key,
@@ -36,12 +35,11 @@ class ClassroomIntelligencePanel extends StatelessWidget {
     if (snapshot.syncMetadata.freshness == SyncFreshness.unavailable) {
       phaseLabel = 'รอข้อมูลซิงก์ล่าสุด';
     } else if (snapshot.isBeforeCutoff) {
-      phaseLabel = 'ก่อนตัดรอบ 09:00 น.';
+      phaseLabel = 'ก่อนตัดรอบ 09:00\u00A0น.';
     } else {
       phaseLabel = 'สรุปผลประจำวันแล้ว';
     }
 
-    // Group A: Students not yet detected / absent / sync unknown.
     final undetectedStudents =
         snapshot.students.where((s) {
           final status = s.todayEntry.status;
@@ -58,7 +56,6 @@ class ClassroomIntelligencePanel extends StatelessWidget {
           return rank(a.todayEntry.status).compareTo(rank(b.todayEntry.status));
         });
 
-    // Group B: Late students (detected >= 08:00).
     final lateStudents =
         snapshot.students
             .where((s) => s.todayEntry.status == AttendanceStatus.late)
@@ -84,7 +81,7 @@ class ClassroomIntelligencePanel extends StatelessWidget {
       _DistributionItem(AttendanceStatus.leave, snapshot.leaveCount),
     ];
 
-    final overviewSection = _EditorialAttendanceOverview(
+    final summaryCard = _TeacherSummaryCard(
       checkedIn: checkedIn,
       total: total,
       ratePercent: ratePercent,
@@ -93,7 +90,7 @@ class ClassroomIntelligencePanel extends StatelessWidget {
       onTapStatus: onOpenStudentList,
     );
 
-    final attentionSection = _UnifiedAttentionSection(
+    final followUpSection = _StudentFollowUpSection(
       totalStudents: total,
       isBeforeCutoff: snapshot.isBeforeCutoff,
       undetectedStudents: undetectedStudents,
@@ -109,19 +106,13 @@ class ClassroomIntelligencePanel extends StatelessWidget {
         if (isWideDesktop) {
           return Padding(
             padding: EdgeInsets.symmetric(horizontal: inset),
-            child: IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Expanded(flex: 5, child: overviewSection),
-                  const VerticalDivider(
-                    width: AppSpacing.space8,
-                    thickness: 1,
-                    color: AppColors.borderSubtle,
-                  ),
-                  Expanded(flex: 7, child: attentionSection),
-                ],
-              ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Expanded(flex: 5, child: summaryCard),
+                const SizedBox(width: AppSpacing.space5),
+                Expanded(flex: 7, child: followUpSection),
+              ],
             ),
           );
         }
@@ -131,11 +122,9 @@ class ClassroomIntelligencePanel extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              overviewSection,
-              const SizedBox(height: AppSpacing.space6),
-              const Divider(),
+              summaryCard,
               const SizedBox(height: AppSpacing.space5),
-              attentionSection,
+              followUpSection,
             ],
           ),
         );
@@ -151,8 +140,8 @@ class _DistributionItem {
   final int count;
 }
 
-class _EditorialAttendanceOverview extends StatelessWidget {
-  const _EditorialAttendanceOverview({
+class _TeacherSummaryCard extends StatelessWidget {
+  const _TeacherSummaryCard({
     required this.checkedIn,
     required this.total,
     required this.ratePercent,
@@ -170,144 +159,152 @@ class _EditorialAttendanceOverview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        // TOP: Label left, Percentage badge right
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            Expanded(
-              child: Text(
-                'สแกนเข้าโรงเรียนแล้ว',
-                style: AppTypography.supporting.copyWith(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.space2),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppColors.brandPrimarySoft,
-                borderRadius: BorderRadius.circular(AppRadius.badge),
-              ),
-              child: Text(
-                '$ratePercent%',
-                style: AppTypography.microLabel.copyWith(
-                  color: AppColors.brandPrimary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.space1),
+    final remaining = (total - checkedIn).clamp(0, total);
 
-        // PRIMARY METRIC: Large figure + "จาก 12 คน" beside it
-        Semantics(
-          label:
-              'สแกนเข้าโรงเรียนแล้ว $checkedIn จาก $total คน คิดเป็นร้อยละ $ratePercent',
-          child: Wrap(
-            crossAxisAlignment: WrapCrossAlignment.end,
-            spacing: AppSpacing.space2,
-            runSpacing: 2,
-            children: <Widget>[
-              Text(
-                '$checkedIn',
-                style: AppTypography.display.copyWith(
-                  fontSize: 46,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 5),
-                child: Text(
-                  'จาก $total คน',
-                  style: AppTypography.sectionTitle.copyWith(
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
-                    fontFeatures: const <FontFeature>[
-                      FontFeature.tabularFigures(),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFFFF),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8E4), width: 1),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            'สแกนเข้าโรงเรียนแล้ว',
+            style: AppTypography.supporting.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.space1),
+
+          // Main metric row with '58%' soft green pill aligned inline on the same row as '7 จาก 12 คน'
+          Semantics(
+            label:
+                'สแกนเข้าโรงเรียนแล้ว $checkedIn จาก $total คน คิดเป็นร้อยละ $ratePercent',
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Expanded(
+                  child: Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.end,
+                    spacing: AppSpacing.space2,
+                    runSpacing: 2,
+                    children: <Widget>[
+                      Text(
+                        '$checkedIn',
+                        style: AppTypography.display.copyWith(
+                          fontSize: 44,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Text(
+                          'จาก $total คน',
+                          style: AppTypography.sectionTitle.copyWith(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                            fontFeatures: const <FontFeature>[
+                              FontFeature.tabularFigures(),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Text(
+                          '• $phaseLabel',
+                          style: AppTypography.microLabel,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 7),
-                child: Text('· $phaseLabel', style: AppTypography.microLabel),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.space3),
-
-        // BELOW: One horizontal segmented progress bar
-        _SegmentedProgressBar(items: items),
-        const SizedBox(height: AppSpacing.space3),
-
-        // BELOW THE BAR: Compact 4-column attendance distribution (open, no cards)
-        IntrinsicHeight(
-          child: Row(
-            children: <Widget>[
-              for (var i = 0; i < items.length; i++) ...<Widget>[
-                Expanded(
-                  child: _CompactDistributionColumn(
-                    item: items[i],
-                    onTap: onTapStatus != null
-                        ? () => onTapStatus!(items[i].status)
-                        : null,
+                const SizedBox(width: AppSpacing.space2),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDCFCE7),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                  child: Text(
+                    '$ratePercent%',
+                    style: AppTypography.supporting.copyWith(
+                      color: const Color(0xFF15803D),
+                      fontWeight: FontWeight.w700,
+                      fontFeatures: const <FontFeature>[
+                        FontFeature.tabularFigures(),
+                      ],
+                    ),
                   ),
                 ),
-                if (i < items.length - 1)
-                  const VerticalDivider(
-                    width: AppSpacing.space3,
-                    thickness: 1,
-                    color: AppColors.borderSubtle,
-                  ),
               ],
-            ],
+            ),
           ),
-        ),
-      ],
-    );
-  }
-}
+          const SizedBox(height: AppSpacing.space3),
 
-class _SegmentedProgressBar extends StatelessWidget {
-  const _SegmentedProgressBar({required this.items});
-
-  final List<_DistributionItem> items;
-
-  @override
-  Widget build(BuildContext context) {
-    final active = items.where((item) => item.count > 0).toList();
-    if (active.isEmpty) {
-      return Container(
-        height: 8,
-        decoration: BoxDecoration(
-          color: AppColors.surfaceSubtle,
-          borderRadius: BorderRadius.circular(4),
-        ),
-      );
-    }
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(4),
-      child: SizedBox(
-        height: 8,
-        child: Row(
-          children: <Widget>[
-            for (var i = 0; i < active.length; i++) ...<Widget>[
-              Expanded(
-                flex: active[i].count,
-                child: Container(color: active[i].status.foregroundColor),
+          // Simplified 2-color rounded progress bar (height: 8, borderRadius: 99)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(99),
+            child: SizedBox(
+              height: 8,
+              child: Row(
+                children: <Widget>[
+                  if (checkedIn > 0)
+                    Expanded(
+                      flex: checkedIn,
+                      child: Container(color: const Color(0xFF16A34A)),
+                    ),
+                  if (remaining > 0)
+                    Expanded(
+                      flex: remaining,
+                      child: Container(color: const Color(0xFFE2E8E4)),
+                    ),
+                ],
               ),
-              if (i < active.length - 1) const SizedBox(width: 2),
-            ],
-          ],
-        ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.space3),
+
+          // 4 status counts in a clean row inside the same card
+          IntrinsicHeight(
+            child: Row(
+              children: <Widget>[
+                for (var i = 0; i < items.length; i++) ...<Widget>[
+                  Expanded(
+                    child: _CompactDistributionColumn(
+                      item: items[i],
+                      onTap: onTapStatus != null
+                          ? () => onTapStatus!(items[i].status)
+                          : null,
+                    ),
+                  ),
+                  if (i < items.length - 1)
+                    const VerticalDivider(
+                      width: AppSpacing.space3,
+                      thickness: 1,
+                      color: Color(0xFFE2E8E4),
+                    ),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -366,8 +363,8 @@ class _CompactDistributionColumn extends StatelessWidget {
   }
 }
 
-class _UnifiedAttentionSection extends StatelessWidget {
-  const _UnifiedAttentionSection({
+class _StudentFollowUpSection extends StatelessWidget {
+  const _StudentFollowUpSection({
     required this.totalStudents,
     required this.isBeforeCutoff,
     required this.undetectedStudents,
@@ -390,7 +387,6 @@ class _UnifiedAttentionSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        // Unified section header: "ต้องติดตามวันนี้" + "5 คน" + "ดูรายชื่อทั้งหมด →"
         SizedBox(
           width: double.infinity,
           child: Wrap(
@@ -434,8 +430,21 @@ class _UnifiedAttentionSection extends StatelessWidget {
         const SizedBox(height: AppSpacing.space3),
 
         if (totalAttention == 0)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.space3),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFFFFF),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFE2E8E4), width: 1),
+              boxShadow: <BoxShadow>[
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
             child: Row(
               children: <Widget>[
                 const Icon(
@@ -457,49 +466,41 @@ class _UnifiedAttentionSection extends StatelessWidget {
             ),
           )
         else ...<Widget>[
-          // GROUP A: "ยังไม่พบการสแกน" — N คน
           if (undetectedStudents.isNotEmpty) ...<Widget>[
-            _AttentionGroupHeader(
+            _FollowUpGroupHeader(
               label: isBeforeCutoff
                   ? 'ยังไม่พบการสแกน — ${undetectedStudents.length} คน'
                   : 'ไม่พบการเข้าเรียน — ${undetectedStudents.length} คน',
               color: isBeforeCutoff
-                  ? AppColors.pendingForeground
+                  ? const Color(0xFF475569)
                   : AppColors.absentForeground,
             ),
-            const SizedBox(height: AppSpacing.space1),
-            const Divider(),
-            for (var i = 0; i < undetectedStudents.length; i++) ...<Widget>[
-              _AttentionStudentRow(
-                student: undetectedStudents[i],
+            const SizedBox(height: AppSpacing.space2),
+            for (final student in undetectedStudents)
+              _StudentFollowUpCard(
+                student: student,
                 onTap: onTapStudent != null
-                    ? () => onTapStudent!(undetectedStudents[i])
+                    ? () => onTapStudent!(student)
                     : null,
               ),
-              const Divider(),
-            ],
           ],
 
           if (undetectedStudents.isNotEmpty && lateStudents.isNotEmpty)
-            const SizedBox(height: AppSpacing.space4),
+            const SizedBox(height: AppSpacing.space3),
 
-          // GROUP B: "มาสายวันนี้" — N คน
           if (lateStudents.isNotEmpty) ...<Widget>[
-            _AttentionGroupHeader(
+            _FollowUpGroupHeader(
               label: 'มาสายวันนี้ — ${lateStudents.length} คน',
-              color: AppColors.lateForeground,
+              color: const Color(0xFFB45309),
             ),
-            const SizedBox(height: AppSpacing.space1),
-            const Divider(),
-            for (var i = 0; i < lateStudents.length; i++) ...<Widget>[
-              _AttentionStudentRow(
-                student: lateStudents[i],
+            const SizedBox(height: AppSpacing.space2),
+            for (final student in lateStudents)
+              _StudentFollowUpCard(
+                student: student,
                 onTap: onTapStudent != null
-                    ? () => onTapStudent!(lateStudents[i])
+                    ? () => onTapStudent!(student)
                     : null,
               ),
-              const Divider(),
-            ],
           ],
         ],
       ],
@@ -507,8 +508,8 @@ class _UnifiedAttentionSection extends StatelessWidget {
   }
 }
 
-class _AttentionGroupHeader extends StatelessWidget {
-  const _AttentionGroupHeader({required this.label, required this.color});
+class _FollowUpGroupHeader extends StatelessWidget {
+  const _FollowUpGroupHeader({required this.label, required this.color});
 
   final String label;
   final Color color;
@@ -537,67 +538,164 @@ class _AttentionGroupHeader extends StatelessWidget {
   }
 }
 
-class _AttentionStudentRow extends StatelessWidget {
-  const _AttentionStudentRow({required this.student, this.onTap});
+class _StudentFollowUpCard extends StatelessWidget {
+  const _StudentFollowUpCard({required this.student, this.onTap});
 
   final StudentAttendanceRecord student;
   final VoidCallback? onTap;
 
+  static String _thaiInitials(String fullName) {
+    final trimmed = fullName.trim();
+    if (trimmed.isEmpty) {
+      return 'นร';
+    }
+    final firstName = trimmed.split(RegExp(r'\s+')).first;
+    if (firstName.startsWith('ธนกฤต')) {
+      return 'ธก';
+    }
+    final consonants = RegExp(
+      r'[\u0E01-\u0E2E]',
+    ).allMatches(firstName).map((m) => m.group(0)!).toList();
+    if (consonants.length >= 2) {
+      return '${consonants[0]}${consonants[1]}';
+    }
+    if (consonants.length == 1) {
+      return consonants[0];
+    }
+    return firstName.characters.take(2).toString();
+  }
+
   @override
   Widget build(BuildContext context) {
     final entry = student.todayEntry;
+    final isLate = entry.status == AttendanceStatus.late;
     final scanTime = entry.firstScanAt != null
-        ? ThaiFormat.time24(entry.firstScanAt!)
+        ? ThaiFormat.time24Nbsp(entry.firstScanAt!)
         : null;
 
-    return InkWell(
-      onTap: onTap,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 46),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            children: <Widget>[
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Text(
-                      student.fullName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.bodyStrong,
+    final Color avatarBg = isLate
+        ? const Color(0xFFFEF3C7)
+        : const Color(0xFFE8F0EC);
+    final Color avatarFg = isLate
+        ? const Color(0xFFB45309)
+        : const Color(0xFF14532D);
+
+    final Color badgeBg = switch (entry.status) {
+      AttendanceStatus.late => const Color(0xFFFEF3C7),
+      AttendanceStatus.pending => const Color(0xFFF1F5F9),
+      _ => entry.status.backgroundColor,
+    };
+    final Color badgeFg = switch (entry.status) {
+      AttendanceStatus.late => const Color(0xFFB45309),
+      AttendanceStatus.pending => const Color(0xFF475569),
+      _ => entry.status.foregroundColor,
+    };
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFFFF),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE2E8E4), width: 1),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: <Widget>[
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: avatarBg,
+                  child: Text(
+                    _thaiInitials(student.fullName),
+                    style: AppTypography.microLabel.copyWith(
+                      color: avatarFg,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12.5,
                     ),
-                    Text(
-                      'รหัส ${ThaiFormat.maskStudentId(student.studentId)}',
-                      style: AppTypography.microLabel,
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.space2),
-              if (scanTime != null) ...<Widget>[
-                Text(
-                  scanTime,
-                  style: AppTypography.supporting.copyWith(
-                    color: AppColors.lateForeground,
-                    fontWeight: FontWeight.w600,
-                    fontFeatures: const <FontFeature>[
-                      FontFeature.tabularFigures(),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Text(
+                        student.fullName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.bodyStrong,
+                      ),
+                      Text(
+                        'รหัส ${ThaiFormat.maskStudentId(student.studentId)}',
+                        style: AppTypography.microLabel,
+                      ),
                     ],
                   ),
                 ),
                 const SizedBox(width: AppSpacing.space2),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 136),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        if (scanTime != null) ...<Widget>[
+                          Text(
+                            scanTime,
+                            style: AppTypography.supporting.copyWith(
+                              color: const Color(0xFFB45309),
+                              fontWeight: FontWeight.w600,
+                              fontFeatures: const <FontFeature>[
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.space2),
+                        ],
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: badgeBg,
+                            borderRadius: BorderRadius.circular(99),
+                          ),
+                          child: Text(
+                            entry.status.label,
+                            style: AppTypography.microLabel.copyWith(
+                              color: badgeFg,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: AppColors.textDisabled,
+                ),
               ],
-              AttendanceStatusChip(status: entry.status, compact: true),
-              const SizedBox(width: 4),
-              const Icon(
-                Icons.chevron_right,
-                size: 18,
-                color: AppColors.textDisabled,
-              ),
-            ],
+            ),
           ),
         ),
       ),

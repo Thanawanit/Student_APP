@@ -9,14 +9,16 @@ class EditorialNavDestination {
     required this.icon,
     required this.selectedIcon,
     required this.label,
+    this.badgeCount = 0,
   });
 
   final IconData icon;
   final IconData selectedIcon;
   final String label;
+  final int badgeCount;
 }
 
-/// Crisp Material 3 × Linear bottom navigation bar (58 dp + safe bottom inset).
+/// Material 3 NavigationBar style bottom bar with horizontal 64x32 StadiumBorder pill indicator.
 class EditorialBottomNav extends StatelessWidget {
   const EditorialBottomNav({
     super.key,
@@ -40,7 +42,7 @@ class EditorialBottomNav extends StatelessWidget {
         child: SafeArea(
           top: false,
           child: SizedBox(
-            height: 58,
+            height: 62,
             child: Row(
               children: <Widget>[
                 for (var i = 0; i < destinations.length; i++)
@@ -71,9 +73,17 @@ class _NavItem extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
+  static const Color _activeColor = Color(0xFF14532D);
+  static const Color _indicatorColor = Color(0xFFDCECE2);
+
   @override
   Widget build(BuildContext context) {
-    final color = isSelected ? AppColors.brandPrimary : AppColors.textSecondary;
+    final iconColor = isSelected ? _activeColor : AppColors.textSecondary;
+    final iconWidget = Icon(
+      isSelected ? destination.selectedIcon : destination.icon,
+      size: 20,
+      color: iconColor,
+    );
 
     return InkWell(
       onTap: onTap,
@@ -85,17 +95,20 @@ class _NavItem extends StatelessWidget {
             AnimatedContainer(
               duration: AppMotion.resolve(context, AppMotion.fast),
               curve: AppMotion.gentleCurve,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppColors.brandPrimarySoft
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
+              width: 64,
+              height: 32,
+              decoration: ShapeDecoration(
+                color: isSelected ? _indicatorColor : Colors.transparent,
+                shape: const StadiumBorder(),
               ),
-              child: Icon(
-                isSelected ? destination.selectedIcon : destination.icon,
-                size: 20,
-                color: color,
+              child: Center(
+                child: destination.badgeCount > 0
+                    ? Badge(
+                        label: Text('${destination.badgeCount}'),
+                        backgroundColor: AppColors.brandPrimary,
+                        child: iconWidget,
+                      )
+                    : iconWidget,
               ),
             ),
             const SizedBox(height: 2),
@@ -104,8 +117,8 @@ class _NavItem extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AppTypography.microLabel.copyWith(
-                color: isSelected ? AppColors.textPrimary : color,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? _activeColor : AppColors.textSecondary,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
           ],

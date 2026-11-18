@@ -72,6 +72,7 @@ class AdaptiveNavigationShell extends StatelessWidget {
                 icon: d.icon,
                 selectedIcon: d.selectedIcon,
                 label: d.label,
+                badgeCount: d.badgeCount,
               ),
           ],
         ),

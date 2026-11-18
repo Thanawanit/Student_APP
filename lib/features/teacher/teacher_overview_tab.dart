@@ -15,9 +15,8 @@ import '../../state/app_controller.dart';
 import '../shared/student_detail_screen.dart';
 import 'class_selection_screen.dart';
 
-/// Teacher Dashboard Overview — Light Editorial × Swiss Data Design.
-/// Uses open editorial sections, large typography, and thin horizontal dividers
-/// instead of nested Bento cards.
+/// Teacher Dashboard Overview screen with soft greenish-gray canvas (#F2F5F3)
+/// and elevated white card hierarchy.
 class TeacherOverviewTab extends StatelessWidget {
   const TeacherOverviewTab({
     super.key,
@@ -36,10 +35,10 @@ class TeacherOverviewTab extends StatelessWidget {
     final inset = ResponsiveContent.horizontalInset(context);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: const Color(0xFFF2F5F3),
       body: Column(
         children: <Widget>[
-          _TeacherEditorialHeader(
+          _TeacherHeader(
             inset: inset,
             classroom: classroom,
             todayDate: controller.todayDate,
@@ -125,8 +124,8 @@ class TeacherOverviewTab extends StatelessWidget {
   }
 }
 
-class _TeacherEditorialHeader extends StatelessWidget {
-  const _TeacherEditorialHeader({
+class _TeacherHeader extends StatelessWidget {
+  const _TeacherHeader({
     required this.inset,
     required this.classroom,
     required this.todayDate,
@@ -145,6 +144,7 @@ class _TeacherEditorialHeader extends StatelessWidget {
     final currentRoom = classroom;
     final freshness = syncMetadata?.freshness;
     final lastSynced = syncMetadata?.lastSyncedAt;
+    final buddhistYear = todayDate.year + 543;
 
     final Color freshnessColor = switch (freshness) {
       SyncFreshness.fresh => AppColors.presentForeground,
@@ -156,7 +156,7 @@ class _TeacherEditorialHeader extends StatelessWidget {
     final String freshnessText = switch (freshness) {
       SyncFreshness.fresh =>
         lastSynced != null
-            ? 'อัปเดต ${ThaiFormat.time24(lastSynced)}'
+            ? 'อัปเดต ${ThaiFormat.time24Nbsp(lastSynced)}'
             : 'ล่าสุด',
       SyncFreshness.delayed => 'ซิงก์ล่าช้า',
       SyncFreshness.unavailable => 'รอการซิงก์',
@@ -166,8 +166,8 @@ class _TeacherEditorialHeader extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
-        color: AppColors.background,
-        border: Border(bottom: BorderSide(color: AppColors.borderSubtle)),
+        color: Color(0xFFFFFFFF),
+        border: Border(bottom: BorderSide(color: Color(0xFFE2E8E4))),
       ),
       child: SafeArea(
         bottom: false,
@@ -176,19 +176,19 @@ class _TeacherEditorialHeader extends StatelessWidget {
             inset,
             AppSpacing.space2,
             inset,
-            AppSpacing.space2,
+            AppSpacing.space3,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Row(
                 children: <Widget>[
-                  const SchoolLogoMark(size: 24),
+                  const SchoolLogoMark(size: 26),
                   const SizedBox(width: AppSpacing.space2),
                   if (currentRoom != null)
                     InkWell(
                       onTap: onSwitchRoom,
-                      borderRadius: BorderRadius.circular(AppRadius.badge),
+                      borderRadius: BorderRadius.circular(AppRadius.control),
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(minHeight: 40),
                         child: Padding(
@@ -260,7 +260,7 @@ class _TeacherEditorialHeader extends StatelessWidget {
               if (currentRoom != null) ...<Widget>[
                 const SizedBox(height: 2),
                 Text(
-                  '${currentRoom.stage.label} · ชั้นมัธยมศึกษาปีที่ ${currentRoom.grade}',
+                  'ชั้นมัธยมศึกษาปีที่ ${currentRoom.grade} • ปีการศึกษา $buddhistYear',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.microLabel,

@@ -94,6 +94,14 @@ abstract final class ThaiFormat {
     return '$hour:$minute น.';
   }
 
+  /// Example: `07:42\u00A0น.` (non-breaking space before น.)
+  static String time24Nbsp(DateTime dateTime) {
+    final d = toBangkok(dateTime);
+    final hour = d.hour.toString().padLeft(2, '0');
+    final minute = d.minute.toString().padLeft(2, '0');
+    return '$hour:$minute\u00A0น.';
+  }
+
   /// Masks student ID to minimize exposure in parent and summary views.
   static String maskStudentId(String studentId) {
     final trimmed = studentId.trim();

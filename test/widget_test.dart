@@ -58,7 +58,7 @@ void main() {
 
       // Screen A: Teacher Overview (no full 12-student table here)
       expect(
-        find.text('มัธยมศึกษาตอนปลาย · ชั้นมัธยมศึกษาปีที่ 5'),
+        find.text('ชั้นมัธยมศึกษาปีที่ 5 • ปีการศึกษา 2569'),
         findsOneWidget,
       );
       expect(find.text('จาก 12 คน'), findsOneWidget);
@@ -123,6 +123,7 @@ void main() {
       expect(find.text('ภูริช แสงทอง'), findsOneWidget);
       expect(find.text('การเข้าเรียนสัปดาห์นี้'), findsOneWidget);
       expect(find.text('สัปดาห์ 16–20 พ.ย. 2569'), findsOneWidget);
+      expect(find.text('รอสแกนเข้าเรียน'), findsOneWidget);
       expect(find.text('รอยืนยัน'), findsWidgets);
       expect(find.text('ดูประวัติการเข้าเรียนย้อนหลัง'), findsOneWidget);
       expect(find.text('แก้ไขสถานะ'), findsNothing);
