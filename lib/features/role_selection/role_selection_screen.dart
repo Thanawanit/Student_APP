@@ -20,8 +20,8 @@ class RoleSelectionScreen extends StatelessWidget {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
       ),
       child: Scaffold(
         backgroundColor: const Color(0xFFF2F5F3),
@@ -42,12 +42,12 @@ class RoleSelectionScreen extends StatelessWidget {
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: <Color>[
-                              Color(0xFF14532D),
-                              Color(0xFF15803D),
-                              Color(0xFFDCFCE7),
+                              Color(0xFFD9EBDF),
+                              Color(0xFFE6F2EA),
+                              Color(0xFFF0F6F2),
                               Color(0xFFF2F5F3),
                             ],
-                            stops: <double>[0.0, 0.45, 0.82, 1.0],
+                            stops: <double>[0.0, 0.4, 0.8, 1.0],
                           ),
                         ),
                         child: SafeArea(
@@ -67,9 +67,9 @@ class RoleSelectionScreen extends StatelessWidget {
                                     boxShadow: <BoxShadow>[
                                       BoxShadow(
                                         color: Colors.black.withValues(
-                                          alpha: 0.12,
+                                          alpha: 0.06,
                                         ),
-                                        blurRadius: 10,
+                                        blurRadius: 12,
                                         offset: const Offset(0, 4),
                                       ),
                                     ],
@@ -90,9 +90,9 @@ class RoleSelectionScreen extends StatelessWidget {
                                           vertical: 3,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.18,
-                                          ),
+                                          color: const Color(
+                                            0xFF14532D,
+                                          ).withValues(alpha: 0.08),
                                           borderRadius: BorderRadius.circular(
                                             99,
                                           ),
@@ -101,7 +101,7 @@ class RoleSelectionScreen extends StatelessWidget {
                                           'ATTENDANCE SYSTEM',
                                           style: AppTypography.microLabel
                                               .copyWith(
-                                                color: Colors.white,
+                                                color: const Color(0xFF166534),
                                                 fontSize: 10,
                                                 fontWeight: FontWeight.w700,
                                                 letterSpacing: 0.8,
@@ -114,7 +114,7 @@ class RoleSelectionScreen extends StatelessWidget {
                                         style: AppTypography.pageTitle.copyWith(
                                           fontSize: 22,
                                           fontWeight: FontWeight.w800,
-                                          color: Colors.white,
+                                          color: const Color(0xFF14532D),
                                         ),
                                       ),
                                       const SizedBox(height: 2),
@@ -126,7 +126,7 @@ class RoleSelectionScreen extends StatelessWidget {
                                             .copyWith(
                                               fontSize: 13,
                                               fontWeight: FontWeight.w500,
-                                              color: const Color(0xFFECFDF5),
+                                              color: const Color(0xFF4B6355),
                                             ),
                                       ),
                                     ],
