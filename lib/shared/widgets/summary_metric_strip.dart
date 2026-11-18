@@ -139,17 +139,12 @@ class _WhiteHeroBentoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final List<({Color fill, Color? border})> capsules =
-        <({Color fill, Color? border})>[
-          for (var i = 0; i < presentCount; i++)
-            (fill: const Color(0xFF10B981), border: null),
-          for (var i = 0; i < lateCount; i++)
-            (fill: const Color(0xFFF59E0B), border: null),
-          for (var i = 0; i < leaveOrAbsentCount; i++)
-            (fill: const Color(0xFF3B82F6), border: null),
-          for (var i = 0; i < pendingCount; i++)
-            (fill: const Color(0xFFF4F4F5), border: const Color(0xFFD4D4D8)),
-        ];
+    final segments = <(int, Color)>[
+      (presentCount, const Color(0xFF10B981)),
+      (lateCount, const Color(0xFFF59E0B)),
+      (leaveOrAbsentCount, const Color(0xFF3B82F6)),
+      (pendingCount, const Color(0xFFE4E4E7)),
+    ].where((s) => s.$1 > 0).toList();
 
     return Container(
       width: double.infinity,
@@ -290,54 +285,41 @@ class _WhiteHeroBentoCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
 
-                  // 2. Visual Student Capsule Matrix
-                  if (capsules.isNotEmpty)
-                    Row(
-                      children: <Widget>[
-                        for (var i = 0; i < capsules.length; i++) ...<Widget>[
-                          Expanded(
-                            child: Container(
-                              height: 22,
-                              decoration: BoxDecoration(
-                                color: capsules[i].fill,
-                                borderRadius: BorderRadius.circular(6),
-                                border: capsules[i].border != null
-                                    ? Border.all(
-                                        color: capsules[i].border!,
-                                        width: 1,
-                                      )
-                                    : null,
-                              ),
+                  // 2. Sleek Horizontal Segmented Progress Bar
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(99),
+                    child: SizedBox(
+                      height: 6,
+                      child: segments.isEmpty
+                          ? Container(color: const Color(0xFFE4E4E7))
+                          : Row(
+                              children: <Widget>[
+                                for (
+                                  var i = 0;
+                                  i < segments.length;
+                                  i++
+                                ) ...<Widget>[
+                                  Expanded(
+                                    flex: segments[i].$1,
+                                    child: Container(color: segments[i].$2),
+                                  ),
+                                  if (i < segments.length - 1)
+                                    Container(width: 2, color: Colors.white),
+                                ],
+                              ],
                             ),
-                          ),
-                          if (i < capsules.length - 1) const SizedBox(width: 5),
-                        ],
-                      ],
                     ),
+                  ),
                   const SizedBox(height: 6),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
-                      Flexible(
-                        child: Text(
-                          '1 ช่อง = นักเรียน 1 คน',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.microLabel.copyWith(
-                            fontSize: 10.5,
-                            color: const Color(0xFFA1A1AA),
-                          ),
-                        ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      'ตัดรอบเวลา 09:00\u00A0น.',
+                      style: AppTypography.microLabel.copyWith(
+                        fontSize: 11,
+                        color: const Color(0xFFA1A1AA),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'ตัดรอบ 09:00\u00A0น.',
-                        style: AppTypography.microLabel.copyWith(
-                          fontSize: 10.5,
-                          color: const Color(0xFFA1A1AA),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                   const SizedBox(height: 14),
 

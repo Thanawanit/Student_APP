@@ -62,8 +62,7 @@ void main() {
       expect(find.text('16 พ.ย. 69'), findsOneWidget);
       expect(find.text('75%'), findsOneWidget);
       expect(find.text('สแกนเข้าเรียนแล้ว'), findsOneWidget);
-      expect(find.text('1 ช่อง = นักเรียน 1 คน'), findsOneWidget);
-      expect(find.text('ตัดรอบ 09:00\u00A0น.'), findsOneWidget);
+      expect(find.text('ตัดรอบเวลา 09:00\u00A0น.'), findsOneWidget);
       expect(find.text('ลา/ขาด'), findsOneWidget);
       expect(find.text('ต้องติดตามวันนี้ (4)'), findsOneWidget);
       expect(find.text('ดูทั้งหมด →'), findsOneWidget);
