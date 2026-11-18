@@ -106,7 +106,7 @@ class ClassroomIntelligencePanel extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               heroCard,
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               followUpSection,
             ],
           ),
@@ -150,7 +150,7 @@ class _WhiteHeroBentoCard extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         color: const Color(0xFFFFFFFF),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: const Color(0xFFE4E4E7), width: 1),
         boxShadow: <BoxShadow>[
           BoxShadow(
@@ -161,7 +161,7 @@ class _WhiteHeroBentoCard extends StatelessWidget {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         child: Stack(
           children: <Widget>[
             Positioned(
@@ -184,7 +184,7 @@ class _WhiteHeroBentoCard extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(22),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
@@ -390,11 +390,152 @@ class _WhiteHeroBentoCard extends StatelessWidget {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 16),
+                  const Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: Color(0xFFF4F4F5),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // 4. Secondary Insight & Weekly Trend Footer
+                  _WeeklyInsightFooter(),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _WeeklyInsightFooter extends StatelessWidget {
+  const _WeeklyInsightFooter();
+
+  static const List<({String day, double height, Color color})> _sparkBars =
+      <({String day, double height, Color color})>[
+        (day: 'จ', height: 16, color: Color(0xFF10B981)),
+        (day: 'อ', height: 24, color: Color(0xFFE4E4E7)),
+        (day: 'พ', height: 24, color: Color(0xFFE4E4E7)),
+        (day: 'พฤ', height: 24, color: Color(0xFFE4E4E7)),
+        (day: 'ศ', height: 24, color: Color(0xFFE4E4E7)),
+      ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFAFAFA),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFF4F4F5)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text(
+                  'เวลาสแกนเข้าเฉลี่ย',
+                  style: AppTypography.microLabel.copyWith(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF71717A),
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '07:44\u00A0น.',
+                  style: AppTypography.sectionTitle.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF09090B),
+                    fontFeatures: const <FontFeature>[
+                      FontFeature.tabularFigures(),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'เร็วกว่าเมื่อวาน 6 นาที',
+                  style: AppTypography.microLabel.copyWith(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF059669),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            width: 1,
+            height: 42,
+            color: const Color(0xFFE4E4E7),
+            margin: const EdgeInsets.symmetric(horizontal: 12),
+          ),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text(
+                  'แนวโน้มสัปดาห์นี้',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.microLabel.copyWith(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF71717A),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      for (var i = 0; i < _sparkBars.length; i++) ...<Widget>[
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            SizedBox(
+                              height: 26,
+                              child: Align(
+                                alignment: Alignment.bottomCenter,
+                                child: Container(
+                                  width: 10,
+                                  height: _sparkBars[i].height,
+                                  decoration: BoxDecoration(
+                                    color: _sparkBars[i].color,
+                                    borderRadius: BorderRadius.circular(3),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _sparkBars[i].day,
+                              style: AppTypography.microLabel.copyWith(
+                                fontSize: 9.5,
+                                color: const Color(0xFF94A3B8),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (i < _sparkBars.length - 1) const SizedBox(width: 6),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
