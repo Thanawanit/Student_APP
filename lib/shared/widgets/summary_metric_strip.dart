@@ -499,13 +499,17 @@ class _ActionableInsightFeed extends StatelessWidget {
             onTap: onTapLatestStudent,
             borderRadius: BorderRadius.circular(8),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF10B981),
-                    shape: BoxShape.circle,
+                Padding(
+                  padding: const EdgeInsets.only(top: 5),
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF10B981),
+                      shape: BoxShape.circle,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -531,8 +535,6 @@ class _ActionableInsightFeed extends StatelessWidget {
                         ),
                       ],
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -551,8 +553,6 @@ class _ActionableInsightFeed extends StatelessWidget {
                     ),
                     child: Text(
                       latestPillText,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                       style: AppTypography.microLabel.copyWith(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -575,11 +575,15 @@ class _ActionableInsightFeed extends StatelessWidget {
             onTap: onTapLeave,
             borderRadius: BorderRadius.circular(8),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                const Icon(
-                  Icons.assignment_ind_outlined,
-                  size: 15,
-                  color: Color(0xFF3B82F6),
+                const Padding(
+                  padding: EdgeInsets.only(top: 2),
+                  child: Icon(
+                    Icons.assignment_ind_outlined,
+                    size: 15,
+                    color: Color(0xFF3B82F6),
+                  ),
                 ),
                 const SizedBox(width: 7),
                 Expanded(
@@ -604,15 +608,16 @@ class _ActionableInsightFeed extends StatelessWidget {
                         ),
                       ],
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 const SizedBox(width: 6),
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  size: 16,
-                  color: Color(0xFF94A3B8),
+                const Padding(
+                  padding: EdgeInsets.only(top: 1),
+                  child: Icon(
+                    Icons.chevron_right_rounded,
+                    size: 16,
+                    color: Color(0xFF94A3B8),
+                  ),
                 ),
               ],
             ),
