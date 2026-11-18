@@ -91,7 +91,7 @@ class _TeacherLoginScreenState extends State<TeacherLoginScreen> {
   }
 
   void _fillSampleAccount() {
-    _identifierController.text = 'teacher.sample';
+    _identifierController.text = 'admin@khunyuam.ac.th';
     _passwordController.text = 'sample1234';
     if (_hasSubmitted) {
       _validateFields();

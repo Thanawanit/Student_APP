@@ -94,7 +94,7 @@ class RoleSelectionScreen extends StatelessWidget {
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        'ระบบติดตามการเข้าเรียนรายวัน',
+                                        'ระบบติดตามการเข้าเรียน • สพม.แม่ฮ่องสอน',
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: AppTypography.supporting

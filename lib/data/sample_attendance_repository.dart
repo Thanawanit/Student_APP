@@ -78,8 +78,8 @@ class SampleAttendanceRepository
     }
     return TeacherSession(
       teacherId: 'T-SAMPLE-01',
-      displayName: 'ครูอารยา วงศ์สุวรรณ (ตัวอย่าง)',
-      roleLabel: 'คุณครู',
+      displayName: 'นายวีระพันธ์ วงศ์สุวรรณ',
+      roleLabel: 'รองผู้อำนวยการกลุ่มบริหารวิชาการ',
       credentialUsed: cleanId,
     );
   }
