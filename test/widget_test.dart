@@ -60,8 +60,8 @@ void main() {
       expect(find.textContaining('ม.5 • อัปเดต'), findsOneWidget);
       expect(find.text('16 พ.ย. 69'), findsOneWidget);
       expect(find.text('75%'), findsOneWidget);
-      expect(find.text('สแกนเข้าเรียนแล้ว'), findsOneWidget);
-      expect(find.text('ดูรายละเอียดสถานะ'), findsOneWidget);
+      expect(find.text('สรุปการเข้าเรียนวันนี้'), findsOneWidget);
+      expect(find.text('ลา / ขาด'), findsOneWidget);
       expect(find.text('ต้องติดตามวันนี้ (4)'), findsOneWidget);
       expect(find.text('ดูทั้งหมด →'), findsOneWidget);
 
