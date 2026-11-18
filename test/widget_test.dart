@@ -2,6 +2,7 @@ import 'package:attendance_app/app.dart';
 import 'package:attendance_app/data/sample_attendance_repository.dart';
 import 'package:attendance_app/features/teacher/teacher_overview_tab.dart';
 import 'package:attendance_app/features/teacher/teacher_students_tab.dart';
+import 'package:attendance_app/shared/widgets/student_avatar.dart';
 import 'package:attendance_app/state/app_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -262,7 +263,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('ธนกฤต รัตนโชติ'), findsOneWidget);
-      expect(find.text('ธร'), findsOneWidget);
+      expect(find.byType(StudentAvatar), findsOneWidget);
       expect(find.text('16 พ.ย. 69'), findsOneWidget);
       expect(find.text('ตรงเวลา'), findsOneWidget);
       expect(find.text('ถึงโรงเรียนเรียบร้อยแล้ว'), findsOneWidget);

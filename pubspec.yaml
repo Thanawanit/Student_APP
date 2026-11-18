@@ -59,6 +59,8 @@ flutter:
 
   assets:
     - assets/images/school_logo.png
+    - assets/images/student_avatar_male.jpg
+    - assets/images/student_avatar_female.jpg
 
   # To add assets to your application, add an assets section, like this:
   # assets:

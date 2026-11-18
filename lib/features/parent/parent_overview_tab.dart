@@ -8,6 +8,7 @@ import '../../core/utils/thai_date_format.dart';
 import '../../domain/models/attendance_models.dart';
 import '../../domain/models/attendance_status.dart';
 import '../../shared/widgets/state_views.dart';
+import '../../shared/widgets/student_avatar.dart';
 import '../../state/app_controller.dart';
 
 /// Parent/Student Overview Screen (`ภาพรวม`) with:
@@ -168,28 +169,6 @@ class _StudentHeader extends StatelessWidget {
   final String subtitle;
   final DateTime todayDate;
 
-  static String _studentInitials(String fullName) {
-    final parts = fullName.trim().split(RegExp(r'\s+'));
-    if (parts.isEmpty || parts.first.isEmpty) {
-      return 'นร';
-    }
-    String firstConsonant(String word) {
-      final match = RegExp(r'[\u0E01-\u0E2E]').firstMatch(word);
-      return match?.group(0) ?? word.characters.first;
-    }
-
-    if (parts.length >= 2 && parts.last.isNotEmpty) {
-      return '${firstConsonant(parts.first)}${firstConsonant(parts.last)}';
-    }
-    final matches = RegExp(
-      r'[\u0E01-\u0E2E]',
-    ).allMatches(parts.first).map((m) => m.group(0)!).toList();
-    if (matches.length >= 2) {
-      return '${matches[0]}${matches[1]}';
-    }
-    return firstConsonant(parts.first);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -209,21 +188,7 @@ class _StudentHeader extends StatelessWidget {
           ),
           child: Row(
             children: <Widget>[
-              SizedBox(
-                width: 42,
-                height: 42,
-                child: CircleAvatar(
-                  backgroundColor: const Color(0xFFDCECE2),
-                  child: Text(
-                    _studentInitials(studentName),
-                    style: AppTypography.bodyStrong.copyWith(
-                      color: const Color(0xFF14532D),
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-              ),
+              StudentAvatar(fullName: studentName, size: 42),
               const SizedBox(width: AppSpacing.space3),
               Expanded(
                 child: Column(

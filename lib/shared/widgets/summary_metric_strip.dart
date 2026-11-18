@@ -6,6 +6,7 @@ import '../../core/theme/app_typography.dart';
 import '../../core/utils/thai_date_format.dart';
 import '../../domain/models/attendance_models.dart';
 import '../../domain/models/attendance_status.dart';
+import 'student_avatar.dart';
 
 /// Teacher Overview content (`ภาพรวม`):
 /// 1) Clean White Hero Bento Card with crisp percentage badge, iOS-style segmented
@@ -548,13 +549,24 @@ class _StudentFollowUpSectionState extends State<_StudentFollowUpSection> {
             ),
           )
         else
-          for (final student in filteredStudents)
-            _StudentFollowUpCard(
-              student: student,
-              onTap: widget.onTapStudent != null
-                  ? () => widget.onTapStudent!(student)
-                  : null,
-            ),
+          Column(
+            children: <Widget>[
+              for (var i = 0; i < filteredStudents.length; i++) ...<Widget>[
+                _StudentFollowUpRow(
+                  student: filteredStudents[i],
+                  onTap: widget.onTapStudent != null
+                      ? () => widget.onTapStudent!(filteredStudents[i])
+                      : null,
+                ),
+                if (i < filteredStudents.length - 1)
+                  const Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: Color(0xFFDDE5E0),
+                  ),
+              ],
+            ],
+          ),
       ],
     );
   }
@@ -606,47 +618,18 @@ class _FollowUpFilterChip extends StatelessWidget {
   }
 }
 
-class _StudentFollowUpCard extends StatelessWidget {
-  const _StudentFollowUpCard({required this.student, this.onTap});
+class _StudentFollowUpRow extends StatelessWidget {
+  const _StudentFollowUpRow({required this.student, this.onTap});
 
   final StudentAttendanceRecord student;
   final VoidCallback? onTap;
 
-  static String _thaiInitials(String fullName) {
-    final trimmed = fullName.trim();
-    if (trimmed.isEmpty) {
-      return 'นร';
-    }
-    final firstName = trimmed.split(RegExp(r'\s+')).first;
-    if (firstName.startsWith('ธนกฤต')) {
-      return 'ธก';
-    }
-    final consonants = RegExp(
-      r'[\u0E01-\u0E2E]',
-    ).allMatches(firstName).map((m) => m.group(0)!).toList();
-    if (consonants.length >= 2) {
-      return '${consonants[0]}${consonants[1]}';
-    }
-    if (consonants.length == 1) {
-      return consonants[0];
-    }
-    return firstName.characters.take(2).toString();
-  }
-
   @override
   Widget build(BuildContext context) {
     final entry = student.todayEntry;
-    final isLate = entry.status == AttendanceStatus.late;
     final scanTime = entry.firstScanAt != null
         ? ThaiFormat.time24Nbsp(entry.firstScanAt!)
         : null;
-
-    final Color avatarBg = isLate
-        ? const Color(0xFFFEF3C7)
-        : const Color(0xFFE8F0EC);
-    final Color avatarFg = isLate
-        ? const Color(0xFFB45309)
-        : const Color(0xFF14532D);
 
     final Color badgeBg = switch (entry.status) {
       AttendanceStatus.late => const Color(0xFFFEF3C7),
@@ -664,94 +647,68 @@ class _StudentFollowUpCard extends StatelessWidget {
         ? 'รหัส $maskedId • เข้า $scanTime'
         : 'รหัส $maskedId';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFFFF),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8E4), width: 1),
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(
-              children: <Widget>[
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: avatarBg,
-                  child: Text(
-                    _thaiInitials(student.fullName),
-                    style: AppTypography.microLabel.copyWith(
-                      color: avatarFg,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12.5,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      Text(
-                        student.fullName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.bodyStrong.copyWith(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+          child: Row(
+            children: <Widget>[
+              StudentAvatar(fullName: student.fullName, size: 38),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(
+                      student.fullName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.bodyStrong.copyWith(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
                       ),
-                      Text(
-                        subtitleText,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.microLabel.copyWith(
-                          fontSize: 12,
-                          color: const Color(0xFF64748B),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.space2),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: badgeBg,
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                  child: Text(
-                    entry.status.label,
-                    style: AppTypography.microLabel.copyWith(
-                      color: badgeFg,
-                      fontWeight: FontWeight.w600,
                     ),
+                    Text(
+                      subtitleText,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.microLabel.copyWith(
+                        fontSize: 12,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.space2),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: badgeBg,
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: Text(
+                  entry.status.label,
+                  style: AppTypography.microLabel.copyWith(
+                    color: badgeFg,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(width: 4),
-                const Icon(
-                  Icons.chevron_right,
-                  size: 18,
-                  color: Color(0xFF94A3B8),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 4),
+              const Icon(
+                Icons.chevron_right,
+                size: 18,
+                color: Color(0xFF94A3B8),
+              ),
+            ],
           ),
         ),
       ),
