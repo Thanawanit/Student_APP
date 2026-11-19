@@ -11,11 +11,12 @@ import '../../shared/widgets/state_views.dart';
 import '../../shared/widgets/student_avatar.dart';
 import '../../state/app_controller.dart';
 
-/// Parent/Student Overview Screen (`ภาพรวม`) with:
-/// 1) Student Initials CircleAvatar (42x42) + Current Date Pill
-/// 2) Emotional Reassurance Emerald Hero Card (no duplicate status words)
-/// 3) Cleaner Weekly Attendance Card with single-dot future days & summary bar
-/// 4) Today's Scan Timeline Card + Parent Quick Action Card ('แจ้งลาเรียนล่วงหน้า')
+/// Parent/Student Overview Screen (`ภาพรวม`):
+/// 1) Clean Student Header (no notification bell)
+/// 2) Hero Peace-of-Mind Arrival Card with ambient emerald glow
+/// 3) Weekly Habit Strip (5-day fitness-style cards + summary ticker)
+/// 4) Today's Timeline (`ไทม์ไลน์วันนี้` - titles & times only)
+/// 5) One-Tap Leave Request Card (no teacher call card)
 class ParentOverviewTab extends StatelessWidget {
   const ParentOverviewTab({
     super.key,
@@ -35,20 +36,19 @@ class ParentOverviewTab extends StatelessWidget {
 
     final studentName = record?.fullName ?? session?.studentName ?? 'นักเรียน';
     final subtitle = record != null
-        ? 'ม.${record.classroom.grade}/${record.classroom.room} • รหัส ${ThaiFormat.maskStudentId(record.studentId)}'
+        ? 'ชั้น ม.${record.classroom.grade}/${record.classroom.room} • เลขประจำตัว ${ThaiFormat.maskStudentId(record.studentId)}'
         : session != null
-        ? 'ม.${session.classroom.grade}/${session.classroom.room} • รหัส ${ThaiFormat.maskStudentId(session.studentId)}'
+        ? 'ชั้น ม.${session.classroom.grade}/${session.classroom.room} • เลขประจำตัว ${ThaiFormat.maskStudentId(session.studentId)}'
         : 'โรงเรียนขุนยวมวิทยา';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F5F3),
+      backgroundColor: const Color(0xFFF8FAFC),
       body: Column(
         children: <Widget>[
           _StudentHeader(
             inset: inset,
             studentName: studentName,
             subtitle: subtitle,
-            todayDate: controller.todayDate,
           ),
           Expanded(
             child: RefreshIndicator(
@@ -58,7 +58,7 @@ class ParentOverviewTab extends StatelessWidget {
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.only(
                   top: AppSpacing.space4,
-                  bottom: AppSpacing.space6,
+                  bottom: 104,
                 ),
                 children: <Widget>[
                   ResponsiveContent(
@@ -78,6 +78,7 @@ class ParentOverviewTab extends StatelessWidget {
 
                               final heroStatusCard = _HeroStatusCard(
                                 entry: record.todayEntry,
+                                todayDate: controller.todayDate,
                               );
 
                               final weeklyCard = _WeeklyAttendanceCard(
@@ -161,21 +162,19 @@ class _StudentHeader extends StatelessWidget {
     required this.inset,
     required this.studentName,
     required this.subtitle,
-    required this.todayDate,
   });
 
   final double inset;
   final String studentName;
   final String subtitle;
-  final DateTime todayDate;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
-        color: Color(0xFFFFFFFF),
-        border: Border(bottom: BorderSide(color: Color(0xFFE2E8E4))),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.94),
+        border: const Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
       ),
       child: SafeArea(
         bottom: false,
@@ -188,7 +187,35 @@ class _StudentHeader extends StatelessWidget {
           ),
           child: Row(
             children: <Widget>[
-              StudentAvatar(fullName: studentName, size: 42),
+              Stack(
+                clipBehavior: Clip.none,
+                children: <Widget>[
+                  StudentAvatar(fullName: studentName, size: 46),
+                  Positioned(
+                    bottom: -1,
+                    right: -1,
+                    child: Container(
+                      width: 14,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF047857),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      child: Center(
+                        child: Container(
+                          width: 4,
+                          height: 4,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(width: AppSpacing.space3),
               Expanded(
                 child: Column(
@@ -199,10 +226,12 @@ class _StudentHeader extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.sectionTitle.copyWith(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF0F172A),
                       ),
                     ),
+                    const SizedBox(height: 1),
                     Text(
                       subtitle,
                       maxLines: 1,
@@ -215,24 +244,6 @@ class _StudentHeader extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: AppSpacing.space2),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8E4),
-                  borderRadius: BorderRadius.circular(99),
-                ),
-                child: Text(
-                  ThaiFormat.shortDateTwoDigitYear(todayDate),
-                  style: AppTypography.microLabel.copyWith(
-                    color: const Color(0xFF334155),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
             ],
           ),
         ),
@@ -242,58 +253,70 @@ class _StudentHeader extends StatelessWidget {
 }
 
 class _HeroStatusCard extends StatelessWidget {
-  const _HeroStatusCard({required this.entry});
+  const _HeroStatusCard({required this.entry, required this.todayDate});
 
   final DailyAttendanceEntry entry;
+  final DateTime todayDate;
 
   @override
   Widget build(BuildContext context) {
     final isPresent = entry.status == AttendanceStatus.present;
     final isLate = entry.status == AttendanceStatus.late;
-    final isPending = entry.status == AttendanceStatus.pending;
 
-    final Color cardBg = switch (entry.status) {
-      AttendanceStatus.present => const Color(0xFFECFDF5),
-      AttendanceStatus.late => const Color(0xFFFFFBEB),
-      _ => const Color(0xFFFFFFFF),
-    };
     final Color cardBorder = switch (entry.status) {
       AttendanceStatus.present => const Color(0xFFA7F3D0),
       AttendanceStatus.late => const Color(0xFFFDE68A),
-      _ => const Color(0xFFE2E8E4),
+      _ => const Color(0xFFE2E8F0),
     };
 
-    final Color badgeCircleBg = switch (entry.status) {
-      AttendanceStatus.present => const Color(0xFF16A34A),
-      AttendanceStatus.late => const Color(0xFFD97706),
-      AttendanceStatus.pending => const Color(0xFFF1F5F9),
-      _ => entry.status.backgroundColor,
+    final List<Color> badgeGradient = switch (entry.status) {
+      AttendanceStatus.present => const <Color>[
+        Color(0xFF047857),
+        Color(0xFF0D9488),
+      ],
+      AttendanceStatus.late => const <Color>[
+        Color(0xFFD97706),
+        Color(0xFFF59E0B),
+      ],
+      _ => const <Color>[Color(0xFF64748B), Color(0xFF94A3B8)],
     };
-    final Color badgeCircleFg = switch (entry.status) {
-      AttendanceStatus.present || AttendanceStatus.late => Colors.white,
-      AttendanceStatus.pending => const Color(0xFF475569),
-      _ => entry.status.foregroundColor,
-    };
+
     final IconData badgeIcon = switch (entry.status) {
-      AttendanceStatus.present => Icons.check_rounded,
+      AttendanceStatus.present => Icons.check_circle_rounded,
       _ => entry.status.icon,
     };
 
-    final String pillText = switch (entry.status) {
-      AttendanceStatus.present => 'ตรงเวลา',
-      _ => entry.status.label,
-    };
     final Color pillBg = switch (entry.status) {
-      AttendanceStatus.present => const Color(0xFFD1FAE5),
-      AttendanceStatus.late => const Color(0xFFFEF3C7),
-      AttendanceStatus.pending => const Color(0xFFF1F5F9),
-      _ => entry.status.backgroundColor,
+      AttendanceStatus.present => const Color(0xFFECFDF5),
+      AttendanceStatus.late => const Color(0xFFFFFBEB),
+      _ => const Color(0xFFF1F5F9),
+    };
+    final Color pillBorder = switch (entry.status) {
+      AttendanceStatus.present => const Color(0xFFA7F3D0),
+      AttendanceStatus.late => const Color(0xFFFDE68A),
+      _ => const Color(0xFFE2E8F0),
+    };
+    final Color pillDot = switch (entry.status) {
+      AttendanceStatus.present => const Color(0xFF047857),
+      AttendanceStatus.late => const Color(0xFFD97706),
+      _ => const Color(0xFF64748B),
     };
     final Color pillFg = switch (entry.status) {
       AttendanceStatus.present => const Color(0xFF065F46),
-      AttendanceStatus.late => const Color(0xFFB45309),
-      AttendanceStatus.pending => const Color(0xFF475569),
-      _ => entry.status.foregroundColor,
+      AttendanceStatus.late => const Color(0xFF92400E),
+      _ => const Color(0xFF334155),
+    };
+
+    final scanTime = entry.firstScanAt != null
+        ? ThaiFormat.time24Nbsp(entry.firstScanAt!)
+        : null;
+
+    final String pillText = switch (entry.status) {
+      AttendanceStatus.present =>
+        scanTime != null ? 'ตรงเวลา • สแกน $scanTime' : 'ตรงเวลา',
+      AttendanceStatus.late =>
+        scanTime != null ? 'มาสาย • สแกน $scanTime' : 'มาสาย',
+      _ => entry.status.label,
     };
 
     final String headlineText = switch (entry.status) {
@@ -303,11 +326,6 @@ class _HeroStatusCard extends StatelessWidget {
       AttendanceStatus.absent => 'ไม่พบข้อมูลการเข้าเรียนวันนี้',
       AttendanceStatus.leave => 'บันทึกการลาเรียนเรียบร้อยแล้ว',
       AttendanceStatus.unknown => 'อยู่ระหว่างตรวจสอบข้อมูล',
-    };
-    final Color headlineColor = switch (entry.status) {
-      AttendanceStatus.present => const Color(0xFF064E3B),
-      AttendanceStatus.late => const Color(0xFF78350F),
-      _ => const Color(0xFF111827),
     };
 
     final String subtitleText = switch (entry.status) {
@@ -322,115 +340,165 @@ class _HeroStatusCard extends StatelessWidget {
       AttendanceStatus.unknown =>
         'ข้อมูลยังไม่ล่าสุดหรืออยู่ระหว่างตรวจสอบ กรุณารอการซิงก์',
     };
-    final Color subtitleColor = switch (entry.status) {
-      AttendanceStatus.present => const Color(0xFF047857),
-      AttendanceStatus.late => const Color(0xFF92400E),
-      _ => const Color(0xFF6B7280),
-    };
-
-    final scanTimeText = entry.firstScanAt != null
-        ? 'เข้า ${ThaiFormat.time24Nbsp(entry.firstScanAt!)}'
-        : null;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: cardBg,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: cardBorder,
-          width: isPresent || isLate ? 1.2 : 1.0,
-        ),
+        border: Border.all(color: cardBorder, width: 1.2),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: badgeCircleBg,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              badgeIcon,
-              size: isPending ? 24 : 28,
-              color: badgeCircleFg,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: <Widget>[
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: pillBg,
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                      child: Text(
-                        pillText,
-                        style: AppTypography.microLabel.copyWith(
-                          fontSize: 11,
-                          color: pillFg,
-                          fontWeight: FontWeight.w700,
-                        ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: <Widget>[
+            if (isPresent)
+              Positioned(
+                bottom: -40,
+                right: -40,
+                child: IgnorePointer(
+                  child: Container(
+                    width: 150,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: <Color>[
+                          const Color(0xFF10B981).withValues(alpha: 0.12),
+                          Colors.transparent,
+                        ],
                       ),
                     ),
-                    if (scanTimeText != null)
+                  ),
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: pillBg,
+                            borderRadius: BorderRadius.circular(99),
+                            border: Border.all(color: pillBorder),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Container(
+                                width: 7,
+                                height: 7,
+                                decoration: BoxDecoration(
+                                  color: pillDot,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Flexible(
+                                child: Text(
+                                  pillText,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTypography.microLabel.copyWith(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: pillFg,
+                                    fontFeatures: const <FontFeature>[
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       Text(
-                        scanTimeText,
-                        style: AppTypography.supporting.copyWith(
-                          fontSize: 13,
-                          color: isLate
-                              ? const Color(0xFFB45309)
-                              : const Color(0xFF15803D),
-                          fontWeight: FontWeight.w700,
-                          fontFeatures: const <FontFeature>[
-                            FontFeature.tabularFigures(),
+                        ThaiFormat.shortDate(todayDate),
+                        style: AppTypography.microLabel.copyWith(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      Container(
+                        width: 54,
+                        height: 54,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.bottomLeft,
+                            end: Alignment.topRight,
+                            colors: badgeGradient,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: <BoxShadow>[
+                            BoxShadow(
+                              color:
+                                  (isLate
+                                          ? const Color(0xFFD97706)
+                                          : const Color(0xFF064E3B))
+                                      .withValues(alpha: 0.20),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Icon(badgeIcon, size: 30, color: Colors.white),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              headlineText,
+                              style: AppTypography.sectionTitle.copyWith(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF0F172A),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              subtitleText,
+                              style: AppTypography.supporting.copyWith(
+                                fontSize: 12.5,
+                                color: const Color(0xFF475569),
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  headlineText,
-                  style: AppTypography.sectionTitle.copyWith(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: headlineColor,
+                    ],
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitleText,
-                  style: AppTypography.supporting.copyWith(
-                    fontSize: 12,
-                    color: subtitleColor,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -467,43 +535,71 @@ class _WeeklyAttendanceCard extends StatelessWidget {
     final attendedDays = summary.presentCount + summary.lateCount;
     final recordedTotal =
         (attendedDays + summary.absentCount + summary.leaveCount).clamp(1, 5);
+    final onTimePct = recordedTotal > 0
+        ? ((summary.presentCount / recordedTotal) * 100).round()
+        : 0;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFFFF),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E8E4), width: 1),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          SizedBox(
-            width: double.infinity,
-            child: Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: AppSpacing.space2,
-              children: <Widget>[
-                Text(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Expanded(
+                child: Text(
                   'การเข้าเรียนสัปดาห์นี้',
-                  style: AppTypography.sectionTitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.sectionTitle.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF0F172A),
+                  ),
                 ),
-                Text(summary.weekLabel, style: AppTypography.microLabel),
-              ],
-            ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFECFDF5),
+                  borderRadius: BorderRadius.circular(99),
+                  border: Border.all(color: const Color(0xFFA7F3D0)),
+                ),
+                child: Text(
+                  '$onTimePct% ตรงเวลา',
+                  style: AppTypography.microLabel.copyWith(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF065F46),
+                    fontFeatures: const <FontFeature>[
+                      FontFeature.tabularFigures(),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: AppSpacing.space3),
+          const SizedBox(height: 14),
 
-          // 5 separate vertical pill boxes inside a Row with SizedBox(width: 8)
+          // 5-day fitness-style habit grid
           IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -527,39 +623,59 @@ class _WeeklyAttendanceCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: AppSpacing.space3),
+          const SizedBox(height: 12),
 
-          // Cleaner summary bar (#F8FAFC, borderRadius: 12)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: AppSpacing.space2,
-              runSpacing: 4,
-              children: <Widget>[
-                Text(
-                  'เข้าเรียนสัปดาห์นี้ $attendedDays/$recordedTotal วัน',
-                  style: AppTypography.supporting.copyWith(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF334155),
-                  ),
+          const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+          const SizedBox(height: 10),
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: AppSpacing.space2,
+            runSpacing: 4,
+            children: <Widget>[
+              Text(
+                'เข้าเรียนสัปดาห์นี้ $attendedDays/$recordedTotal วัน',
+                style: AppTypography.supporting.copyWith(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF334155),
                 ),
-                Text(
-                  'สาย ${summary.lateCount} • ขาด ${summary.absentCount} • ลา ${summary.leaveCount}',
+              ),
+              Text.rich(
+                TextSpan(
                   style: AppTypography.microLabel.copyWith(
                     fontSize: 12,
                     color: const Color(0xFF64748B),
                   ),
+                  children: <InlineSpan>[
+                    const TextSpan(text: 'สาย '),
+                    TextSpan(
+                      text: '${summary.lateCount}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF92400E),
+                      ),
+                    ),
+                    const TextSpan(text: ' • ขาด '),
+                    TextSpan(
+                      text: '${summary.absentCount}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFFDC2626),
+                      ),
+                    ),
+                    const TextSpan(text: ' • ลา '),
+                    TextSpan(
+                      text: '${summary.leaveCount}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1D4ED8),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
@@ -586,10 +702,6 @@ class _DayPillBox extends StatelessWidget {
     final scanTime = entry?.firstScanAt;
     final isEmptyDay = status == null;
 
-    final Color fgColor = isActive
-        ? const Color(0xFF14532D)
-        : const Color(0xFF94A3B8);
-
     final String? detailText;
     if (scanTime != null) {
       final d = ThaiFormat.toBangkok(scanTime);
@@ -604,16 +716,16 @@ class _DayPillBox extends StatelessWidget {
         _ => status.label,
       };
     } else {
-      detailText = null;
+      detailText = '-';
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
       decoration: BoxDecoration(
-        color: isActive ? const Color(0xFFE8F5EE) : const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
+        color: isActive ? const Color(0xFFECFDF5) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isActive ? const Color(0xFF16A34A) : const Color(0xFFE2E8F0),
+          color: isActive ? const Color(0xFF059669) : const Color(0xFFE2E8F0),
           width: isActive ? 1.5 : 1,
         ),
       ),
@@ -625,42 +737,69 @@ class _DayPillBox extends StatelessWidget {
             child: Text(
               '$dayName ${date.day}',
               style: AppTypography.microLabel.copyWith(
-                color: fgColor,
+                fontSize: 12,
+                color: isActive
+                    ? const Color(0xFF064E3B)
+                    : const Color(0xFF334155),
                 fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
           ),
           const SizedBox(height: 6),
           if (isEmptyDay)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Text(
-                '•',
-                style: TextStyle(
-                  fontSize: 16,
-                  height: 1.0,
-                  color: Color(0xFFCBD5E1),
-                  fontWeight: FontWeight.w700,
+            Container(
+              width: 28,
+              height: 28,
+              decoration: const BoxDecoration(
+                color: Color(0xFFE2E8F0),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF64748B),
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
             )
-          else ...<Widget>[
-            Icon(status.icon, size: 16, color: fgColor),
-            const SizedBox(height: 4),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                detailText!,
-                style: AppTypography.microLabel.copyWith(
-                  fontSize: 11,
-                  color: fgColor,
-                  fontWeight: isActive || scanTime != null
-                      ? FontWeight.w600
-                      : FontWeight.w500,
-                ),
+          else
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: status == AttendanceStatus.present
+                    ? const Color(0xFF047857)
+                    : status == AttendanceStatus.late
+                    ? const Color(0xFFD97706)
+                    : const Color(0xFF64748B),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                status == AttendanceStatus.present
+                    ? Icons.check_rounded
+                    : status.icon,
+                size: 16,
+                color: Colors.white,
               ),
             ),
-          ],
+          const SizedBox(height: 6),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              detailText,
+              style: AppTypography.microLabel.copyWith(
+                fontSize: 11.5,
+                color: isActive
+                    ? const Color(0xFF065F46)
+                    : const Color(0xFF64748B),
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -681,22 +820,20 @@ class _TodayTimelineCard extends StatelessWidget {
         ? 'ลาเรียน'
         : 'รอดำเนินการ';
 
-    final Color checkInRightColor = hasCheckIn
-        ? const Color(0xFF15803D)
-        : const Color(0xFF94A3B8);
+    final bool homeroomDone = hasCheckIn;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFFFF),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8E4), width: 1),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -706,89 +843,135 @@ class _TodayTimelineCard extends StatelessWidget {
           Text(
             'ไทม์ไลน์วันนี้',
             style: AppTypography.sectionTitle.copyWith(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF0F172A),
             ),
           ),
-          const SizedBox(height: AppSpacing.space3),
+          const SizedBox(height: 14),
 
-          // Row 1: สแกนเข้าโรงเรียน
-          Row(
+          Stack(
             children: <Widget>[
-              Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: hasCheckIn
-                      ? const Color(0xFF16A34A)
-                      : const Color(0xFFCBD5E1),
-                  shape: BoxShape.circle,
-                ),
+              Positioned(
+                left: 13,
+                top: 14,
+                bottom: 14,
+                child: Container(width: 2, color: const Color(0xFFE2E8F0)),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'สแกนเข้าโรงเรียน',
-                  style: AppTypography.supporting.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+              Column(
+                children: <Widget>[
+                  _TimelineStepRow(
+                    icon: Icons.sensors_rounded,
+                    isCompleted: hasCheckIn,
+                    title: 'สแกนเข้าโรงเรียน',
+                    trailingText: checkInRightText,
+                    isPillTrailing: !hasCheckIn,
                   ),
-                ),
-              ),
-              Text(
-                checkInRightText,
-                style: AppTypography.supporting.copyWith(
-                  color: checkInRightColor,
-                  fontWeight: hasCheckIn ? FontWeight.w600 : FontWeight.w400,
-                  fontFeatures: const <FontFeature>[
-                    FontFeature.tabularFigures(),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          // Vertical connector
-          Padding(
-            padding: const EdgeInsets.only(left: 4),
-            child: Container(
-              width: 2,
-              height: 14,
-              color: const Color(0xFFE2E8E4),
-            ),
-          ),
-
-          // Row 2: สแกนกลับบ้าน (Pending)
-          Row(
-            children: <Widget>[
-              Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFF94A3B8), width: 2),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'สแกนกลับบ้าน',
-                  style: AppTypography.supporting.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+                  const SizedBox(height: 14),
+                  _TimelineStepRow(
+                    icon: Icons.flag_rounded,
+                    isCompleted: homeroomDone,
+                    title: 'เข้าแถวเคารพธงชาติ & โฮมรูม',
+                    trailingText: homeroomDone
+                        ? '08:00\u00A0น.'
+                        : 'รอดำเนินการ',
+                    isPillTrailing: !homeroomDone,
                   ),
-                ),
-              ),
-              Text(
-                'รอดำเนินการ',
-                style: AppTypography.supporting.copyWith(
-                  color: const Color(0xFF94A3B8),
-                ),
+                  const SizedBox(height: 14),
+                  const _TimelineStepRow(
+                    icon: Icons.meeting_room_outlined,
+                    isCompleted: false,
+                    title: 'สแกนออกจากโรงเรียน',
+                    trailingText: 'รอดำเนินการ',
+                    isPillTrailing: true,
+                  ),
+                ],
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+}
+
+class _TimelineStepRow extends StatelessWidget {
+  const _TimelineStepRow({
+    required this.icon,
+    required this.isCompleted,
+    required this.title,
+    required this.trailingText,
+    required this.isPillTrailing,
+  });
+
+  final IconData icon;
+  final bool isCompleted;
+  final String title;
+  final String trailingText;
+  final bool isPillTrailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: isCompleted
+                ? const Color(0xFF047857)
+                : const Color(0xFFE2E8F0),
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 2),
+          ),
+          child: Icon(
+            icon,
+            size: 14,
+            color: isCompleted ? Colors.white : const Color(0xFF64748B),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            title,
+            style: AppTypography.bodyStrong.copyWith(
+              fontSize: 14,
+              fontWeight: isCompleted ? FontWeight.w600 : FontWeight.w500,
+              color: isCompleted
+                  ? const Color(0xFF0F172A)
+                  : const Color(0xFF475569),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        if (isPillTrailing)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFE2E8E4)),
+            ),
+            child: Text(
+              trailingText,
+              style: AppTypography.microLabel.copyWith(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF475569),
+              ),
+            ),
+          )
+        else
+          Text(
+            trailingText,
+            style: AppTypography.bodyStrong.copyWith(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF065F46),
+              fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+            ),
+          ),
+      ],
     );
   }
 }
@@ -803,21 +986,21 @@ class _LeaveRequestQuickActionCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFFFF),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8E4), width: 1),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFA7F3D0)),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           onTap: () {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -828,23 +1011,34 @@ class _LeaveRequestQuickActionCard extends StatelessWidget {
             );
           },
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.all(16),
             child: Row(
               children: <Widget>[
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8F5EE),
-                    borderRadius: BorderRadius.circular(12),
+                    gradient: const LinearGradient(
+                      begin: Alignment.bottomLeft,
+                      end: Alignment.topRight,
+                      colors: <Color>[Color(0xFF065F46), Color(0xFF0F766E)],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: <BoxShadow>[
+                      BoxShadow(
+                        color: const Color(0xFF064E3B).withValues(alpha: 0.16),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: const Icon(
                     Icons.edit_calendar_rounded,
-                    color: Color(0xFF15803D),
-                    size: 20,
+                    color: Colors.white,
+                    size: 22,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -852,14 +1046,14 @@ class _LeaveRequestQuickActionCard extends StatelessWidget {
                       Text(
                         'แจ้งลาเรียนล่วงหน้า',
                         style: AppTypography.bodyStrong.copyWith(
-                          fontSize: 14,
+                          fontSize: 14.5,
                           fontWeight: FontWeight.w700,
                           color: const Color(0xFF0F172A),
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'ส่งคำขอลาป่วยหรือลากิจถึงครูที่ปรึกษา',
+                        'ส่งคำขอลาป่วยหรือลากิจถึงครูที่ปรึกษาออนไลน์',
                         style: AppTypography.microLabel.copyWith(
                           fontSize: 12,
                           color: const Color(0xFF64748B),
@@ -868,11 +1062,20 @@ class _LeaveRequestQuickActionCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: AppSpacing.space2),
-                const Icon(
-                  Icons.chevron_right,
-                  size: 20,
-                  color: Color(0xFF94A3B8),
+                const SizedBox(width: 8),
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFECFDF5),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFA7F3D0)),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 18,
+                    color: Color(0xFF065F46),
+                  ),
                 ),
               ],
             ),

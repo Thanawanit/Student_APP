@@ -121,7 +121,7 @@ void main() {
 
       expect(find.text('ภูริช แสงทอง'), findsOneWidget);
       expect(find.text('การเข้าเรียนสัปดาห์นี้'), findsOneWidget);
-      expect(find.text('สัปดาห์ 16–20 พ.ย. 2569'), findsOneWidget);
+      expect(find.textContaining('ตรงเวลา'), findsWidgets);
       expect(find.text('รอสแกนเข้าเรียน'), findsOneWidget);
       expect(find.text('รอยืนยัน'), findsWidgets);
       expect(find.text('ไทม์ไลน์วันนี้'), findsOneWidget);
@@ -264,8 +264,7 @@ void main() {
 
       expect(find.text('ธนกฤต รัตนโชติ'), findsOneWidget);
       expect(find.byType(StudentAvatar), findsOneWidget);
-      expect(find.text('16 พ.ย. 69'), findsOneWidget);
-      expect(find.text('ตรงเวลา'), findsOneWidget);
+      expect(find.text('16 พ.ย. 2569'), findsOneWidget);
       expect(find.text('ถึงโรงเรียนเรียบร้อยแล้ว'), findsOneWidget);
       expect(find.text('การเข้าเรียนสัปดาห์นี้'), findsOneWidget);
       expect(find.text('เข้าเรียนสัปดาห์นี้ 1/1 วัน'), findsOneWidget);

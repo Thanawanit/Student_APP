@@ -62,6 +62,7 @@ class AdaptiveNavigationShell extends StatelessWidget {
 
     if (sizeClass == WindowSizeClass.compact) {
       return Scaffold(
+        extendBody: true,
         body: body,
         bottomNavigationBar: EditorialBottomNav(
           selectedIndex: selectedIndex,
